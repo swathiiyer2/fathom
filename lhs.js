@@ -277,9 +277,19 @@ class AndLhs extends Lhs {
      * We require all rules that emit any of the types mentioned in my args.
      */
     prerequisites(ruleset) {
-        // TODO: Come up with a stricter set of prereqs. and('A') -> type('A')
-        // is equivalent to A -> A, which depends on only adders, not emitters.
-        // See branch inferrer-generalization.
+        // TODO: Figure out what to do about and('A') -> type('A'). That's
+        // equivalent to A -> A, which depends on only adders, not emitters.
+        //
+        // and(A) -> A depends on adding A (changes no types)  ! emits A
+        // and(A, B) -> A depends on adding A, emitting B  # finalizes B, because it's converting it to an A. When we finalize something, we depend on emitting in (not merely adding it, because the score must be complete).  ! adds A
+        // and(A) -> typeIn(A, B) depends on anything emitting A (It's A->*, according to how our current Rule.prerequisites() code behaves.)  # finalizes A by converting it to B  ! adds B, emits A
+        // and(A, B) -> typeIn(A, B) depends on adding A or B (because it never changes the type of any fnode: they all already have A and B)  # finalizes nothing (same as "changes no types")  ! emits A and B
+        // and(A, B) -> typeIn(A, B, C) depends on anything emitting A or B (because it can change a fnode's type by adding C).  # finalizes A and B (cuz they could get converted to C)  ! adds C, emits A and B
+        //
+        // Now find a pattern to the above, and code it up.
+        // * [No] If RHS is a single type and that type appears on the LHS, depend on adding that type and emitting any other LHS types. (No: and(A, B) -> typeIn(A, B))
+        // * [No] Start by assuming all LHS types need Emitting. For each such type that appears on the RHS, change it to Adding. If there are any left over on RHS, everything changes back to Emitting. 
+        // * [Yes!] Depends on emitters of any LHS type we finalize (might change the type of). Depends on adders of any other LHS types. THIS IS A GENERAL RULE: works even for simple, non-and rules!
         const prereqTypes = this._args.map(arg => arg.guaranteedType());
         const prereqs = new Set();
         for (let type of prereqTypes) {
