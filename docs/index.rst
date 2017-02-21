@@ -21,6 +21,7 @@ Contents
    intro
    using
    ruleset
+   fnodes
    utilities
    development
    versions

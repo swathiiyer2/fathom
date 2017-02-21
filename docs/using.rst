@@ -71,17 +71,19 @@ Once the ruleset is defined, run a DOM tree through it:
    // Tell the ruleset which DOM to run against, yielding a factbase about the document:
    const facts = rules.against(dom);
 
-After running a tree or subtree through, pull the answers out of the factbase: in this case, we want the max-scoring title, which the ruleset conveniently stores under the "title" output key:
+After running a tree or subtree through, pull the answers out of the factbase: in this case, we want the note containing the max-scoring title, which the ruleset conveniently stores under the "title" output key:
 
 .. code-block:: js
 
-   const bestTitle = facts.get('title');
+   const bestTitleFnode = facts.get('title');
+
+A more developed ruleset would expose the title itself using :func:`through`. But in this case, you would pull it out manually using the :doc:`methods on fnodes<fnodes>`.
 
 If the ruleset doesn't anticipate the output you want, you can ask for it more explicitly by passing a full LHS to :func:`~BoundRuleset.get`. For example, if you simply want all the title-ish things so you can do further computation on them...
 
 .. code-block:: js
 
-   const allTitles = facts.get(type('titley'));
+   const allTitleFnodes = facts.get(type('titley'));
 
 Or if you have a reference to a DOM element from elsewhere in your program, you can look up the scores, types, and notes Fathom attached to it:
 

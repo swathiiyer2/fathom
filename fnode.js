@@ -2,6 +2,10 @@ const {type} = require('./side.js');
 const {getDefault, setDefault} = require('./utils');
 
 
+/**
+ * A wrapper around a DOM node, storing :term:`types<type>`,
+ * :term:`scores<score>`, and :term:`notes<note>` that apply to it
+ */
 class Fnode {
     // element: The DOM element I describe
     // ruleset: The ruleset which created me
@@ -29,7 +33,9 @@ class Fnode {
         this._conservedScores = new Map();
     }
 
-    // Return whether the given type is one of the ones attached to this node.
+    /**
+     * Return whether the given type is one of the ones attached to the node.
+     */
     hasType(type) {
         // Run type(theType) against the ruleset to make sure this doesn't
         // return false just because we haven't lazily run certain rules yet.
@@ -37,20 +43,28 @@ class Fnode {
         return this._types.has(type);
     }
 
-    // Return our score for the given type, 1 by default.
+    /**
+     * Return the node's score for the given type, 1 by default.
+     */
     scoreFor(type) {
         this._computeType(type);
         return this.scoreSoFarFor(type);
     }
 
-    // Return the note for the given type, undefined if none.
+    /**
+     * Return the node's note for the given type, ``undefined`` if none.
+     */
     noteFor(type) {
         this._computeType(type);
         return this._noteSoFarFor(type);
     }
 
-    // Return whether this node has a note for the given type.
-    // Undefined is not considered a note and may be overwritten with impunity.
+    /**
+     * Return whether this node has a note for the given type.
+     *
+     * ``undefined`` is not considered a note and may be overwritten with
+     * impunity.
+     */
     hasNoteFor(type) {
         this._computeType(type);
         return this._hasNoteSoFarFor(type);
