@@ -13,6 +13,9 @@ class Fnode {
         if (element === undefined) {
             throw new Error("Someone tried to make a fnode without specifying the element they're talking about.");
         }
+        /**
+         * The raw DOM element this fnode describes
+         */
         this.element = element;
         this._ruleset = ruleset;
 
