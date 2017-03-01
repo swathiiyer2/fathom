@@ -14,3 +14,16 @@ To run the tests, run... ::
 This will also run the linter and analyze test coverage. You can find the coverage report in the ``coverage`` directory and the HTML version under ``coverage/lcov-report/index.html``.
 
 If you're in the midst of a tornado of rapid development and the fancy stuff is too slow, you can invoke ``make test`` to run "just the tests, ma'am".
+
+Docs
+====
+
+To build the docs, first install jsdoc and Sphinx::
+
+    npm install jsdoc
+    pip install 'sphinx-js>=1.3,<2.0' sphinx_rtd_theme
+
+You may also have to mess with your ``$PATH`` so Sphinx can find jsdoc. Then, go into the docs dir, and build them::
+
+    cd docs
+    make html
