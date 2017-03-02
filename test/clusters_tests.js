@@ -183,6 +183,26 @@ describe('Cluster tests', function () {
             assertFarther(stride, noStride);
             assertFarther(interposedSiblings, noSiblings);
         });
+
+        it('considers A and B to be far apart if one contains the other', function () {
+            // This tends to ostracize the inner element, which is good,
+            // because it's not interesting, because we'll get it through
+            // including the outer element in the cluster.
+            const doc = jsdom(`
+                <body>
+                    <div id="b">
+                        <div id="a">
+                        </div>
+                    </div>
+                </body>
+            `);
+            assert.equal(distance(doc.getElementById('a'),
+                                  doc.getElementById('b')),
+                         Number.MAX_VALUE);
+            assert.equal(distance(doc.getElementById('b'),
+                                  doc.getElementById('a')),
+                         Number.MAX_VALUE);
+        });
     });
 
     describe('clusters()', function () {

@@ -75,13 +75,23 @@ function distance(elementA, elementB) {
     // Ascend to common parent, stacking them up for later reference:
     while (!aAncestor.contains(elementB)) {  // Note: an element does contain() itself.
         aAncestor = aAncestor.parentNode;
-        aAncestors.push(aAncestor);
+        aAncestors.push(aAncestor); //aAncestors = [a, b]. aAncestor = b // if a is outer: no loop here; aAncestors = [a]. aAncestor = a.
     }
 
+    // In compareDocumentPosition()'s opinion, inside implies after. Basically,
+    // before and after pertain to opening tags.
+    const comparison = elementA.compareDocumentPosition(elementB);
+
+    // If either contains the other, abort. We'd either return a misleading
+    // number or else walk upward right out of the document while trying to
+    // make the ancestor stack.
+    if (comparison & (elementA.DOCUMENT_POSITION_CONTAINS | elementA.DOCUMENT_POSITION_CONTAINED_BY)) {
+        return Number.MAX_VALUE;
+    }
     // Make an ancestor stack for the right node too so we can walk
     // efficiently down to it:
     do {
-        bAncestor = bAncestor.parentNode;  // Assumes we've early-returned above if A === B.
+        bAncestor = bAncestor.parentNode;  // Assumes we've early-returned above if A === B. This walks upward from the outer node and up out of the tree. It STARTS OUT with aAncestor === bAncestor!
         bAncestors.push(bAncestor);
     } while (bAncestor !== aAncestor);
 
@@ -90,19 +100,13 @@ function distance(elementA, elementB) {
     // nodes:
     let left = aAncestors;
     let right = bAncestors;
-    // In compareDocumentPosition()'s opinion, inside implies after. Basically,
-    // before and after pertain to opening tags.
-    const comparison = elementA.compareDocumentPosition(elementB);
     let cost = 0;
-    let mightStride;
     if (comparison & elementA.DOCUMENT_POSITION_FOLLOWING) {
-        // A is before, so it could contain the other node.
-        mightStride = !(comparison & elementA.DOCUMENT_POSITION_CONTAINED_BY);
+        // A is before, so it could contain the other node. What did I mean to do if one contained the other?
         left = aAncestors;
         right = bAncestors;
     } else if (comparison & elementA.DOCUMENT_POSITION_PRECEDING) {
         // A is after, so it might be contained by the other node.
-        mightStride = !(comparison & elementA.DOCUMENT_POSITION_CONTAINS);
         left = bAncestors;
         right = aAncestors;
     }
@@ -122,9 +126,8 @@ function distance(elementA, elementB) {
             cost += l.tagName === r.tagName ? SAME_TAG_COST : DIFFERENT_TAG_COST;
         }
         // Optimization: strides might be a good dimension to eliminate.
-        if (mightStride) {
-            cost += numStrides(l, r) * STRIDE_COST;
-        }
+        // TODO: Don't count stride nodes if STRIDE_COST is 0.
+        cost += numStrides(l, r) * STRIDE_COST;
     }
 
     return cost;
