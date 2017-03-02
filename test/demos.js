@@ -1,17 +1,17 @@
 const assert = require('chai').assert;
 const {jsdom} = require('jsdom');
 
-const {dom, flavor, out, props, rule, ruleset, type} = require('../index');
-const {inlineTextLength, linkDensity, numberOfMatches, page, sum} = require('../utils');
+const {clusters} = require('../clusters');
+const {dom, out, props, rule, ruleset, score, type} = require('../index');
+const {domSort, inlineTextLength, linkDensity, max, numberOfMatches, page, sum} = require('../utils');
 
 
 describe('Design-driving demos', function () {
     it('handles a simple series of short-circuiting rules', function () {
         // TODO: Short-circuiting isn't implemented yet. The motivation of this
-        // test is to inspire changes to ranker functions that make them more
-        // declarative, such that the engine can be smart enough to run the
-        // highest-possible-scoring flavor-chain of rules first and, if it
-        // succeeds, omit the others.
+        // test is to inspire engine so it's smart enough to run the highest-
+        // possible-scoring type-chain of rules first and, if it succeeds,
+        // omit the others.
         const doc = jsdom(`
             <meta name="hdl" content="HDL">
             <meta property="og:title" content="OpenGraph">
@@ -110,74 +110,115 @@ describe('Design-driving demos', function () {
         `)));
     });
 
-    it.skip("takes a decent shot at doing Readability's job", function () {
+    it("takes a decent shot at doing Readability's job", function () {
         // Potential advantages over readability:
         // * State clearly contained
-        // * Should work fine with ideographic languages and others that lack space-delimited words
+        // * Should work fine with ideographic languages and others that lack
+        //   space-delimited words
         // * Pluggable
         // * Potential to have rules generated or tuned by training
-        // * Adaptable to find things other than the main body text
-        // * Potential to perform better since it doesn't have to run over and over, loosening constraints each time, if it fails
+        // * Adaptable to find things other than the main body text (like
+        //   clusters of nav links)
+        // * Potential to perform better since it doesn't have to run over and
+        //   over, loosening constraints each time, if it fails
 
         // Score a node based on how much text is directly inside it and its
         // inline-tag children.
-        function paragraphishByLength(node) {
-            const length = inlineTextLength(node.element);
+        function scoreByLength(fnode) {
+            const length = inlineTextLength(fnode.element);
             return {
-                flavor: 'paragraphish',
-                score: length,
-                notes: {inlineLength: length}  // Store expensive inline length.
+                score: length,  // May be scaled someday
+                note: {inlineLength: length}  // Store expensive inline length for linkDensity().
             };
         }
 
         const doc = jsdom(`
-            <p>
-                <a class="good" href="/things">Things</a> / <a class="bad" href="/things/tongs">Tongs</a>
-            </p>
-            <p>
-                Once upon a time, there was a large bear named Sid. Sid was very large and bearish, and he had a bag of hammers.
-            </p>
+            <div>
+                <h1>
+                    Welcome to here.
+                </h1>
+                <p>
+                    <a class="good" href="/things">Things</a> / <a class="bad" href="/things/tongs">Tongs</a>
+                </p>
+            </div>
+            <div id="lovelyContent">
+                <p>
+                    Once upon a time, there was a large bear named Sid. Sid was very large and bearish, and he had a bag of hammers.
+                </p>
+                <p>
+                    Sid dreamed of doughnuts--bear claws in particular--and wanted nothing more than to sink his stinking teeth into some. One day, Sid traded the bag of hammers to a serial scribbler named Sam for a dozen doughnuts. It was a good trade. Sid lived happily ever after.
+                </p>
+                <p>
+                    Did you ever trade a bag of hammers for something? What was it? What were you doing with a bag of hammers, anyway? Don't you know that keeping your hammers in a bag leads to chipped heads? What is wrong with you, anyway?
+                </p>
+                <p>
+                    Hamstrung by ham-handed dreams of hammers, you will hamhandedly hamper Hap's hangbag handbooks. You'll be handing out handbills by the handful until they handcuff you and handicap your handiwords. What, then, will become of your handkerchief handles?
+                </p>
+            </div>
             <div>
                 <p>
-                    One day, Sid traded the bag of hammers to a serial scribbler named Sam for a dozen doughnuts. It was a good trade. Sid lived happily ever after.
+                    Hammers are copyright 1996.
                 </p>
             </div>
         `);
-        // This set of rules might be the beginning of something that works.
-        // (It's modeled after what I do when I try to do this by hand: I look
+
+        // This set of rules is the beginning of something that works.
+        // It's modeled after what I do when I try to do this by hand: I look
         // for balls of black text, and I look for them to be near each other,
-        // generally siblings: a "cluster" of them.)
+        // generally siblings: a "cluster" of them.
         const rules = ruleset(
-            // Score on text length -> texty. We start with this because, no matter
-            // the other markup details, the main body text is definitely going to
-            // have a bunch of text.
-            rule(dom('p,div'), paragraphishByLength),
+            // Score on text length -> paragraphish. We start with this
+            // because, no matter the other markup details, the main body text
+            // is definitely going to have a bunch of text.
+            rule(dom('p,div'), props(scoreByLength).type('paragraphish')),
+            // TODO: Maybe include <li>s, blockquotes, and such in here too,
+            // and let the linkDensity and clustering cull out the nav
+            // elements. Or just do a "blur" algorithm within the cluster,
+            // pulling in other elements with decent text density, good CSS
+            // smells, and such. (Interstitials like those probably won't split
+            // clusters if the stride cost is set low enough.) To test, add a
+            // very short paragraph in the midst of the long one, thus testing
+            // our leaning toward contiguousness.
 
             // Scale it by inverse of link density:
-            rule(flavor('paragraphish'), node => ({score: 1 - linkDensity(node)}))
+            rule(type('paragraphish'), score(fnode => 1 - linkDensity(fnode))),
 
-            // Give bonuses for being in p tags. TODO: article tags, too
-            //rule(flavor('texty'), node => ({score: node.el.tagName === 'p' ? 1.5 : 1})),
+            // Give bonuses for being in p tags.
+            rule(dom('p'), score(1.5).type('paragraphish'))
+            // TODO: article tags, etc., too
 
-            // Give bonuses for being (nth) cousins of other texties. IOW,
-            // texties that are the same-leveled children of a common ancestor
-            // get a bonus. [Ed: we should probably use clustering instead.]
-            //rule(flavor('texty'), node => ({score: numCousinsOfAtLeastOfScore(node, 200) * 1.5}))
-
-            // TODO: How do we ensure blockquotes, h2s, uls, etc. that are part of the article, betwixt the clustered paragraphishes, are included? Maybe what we're really looking for is a single, high-scoring container (or span of a container?) and then taking either everything inside it or everything but certain excised bits (interstitial ads/relateds). There might be 2 phases: rank and yank.
-            // TODO: Also do something about invisible nodes.
+            // TODO: Ignore invisible nodes so people can't game with those.
         );
-        const kb = rules.score(doc);
-        const paragraphishes = kb.nodesOfFlavor('paragraphish');
-        assert.equal(paragraphishes[0].score, 5);
-        assert.equal(paragraphishes[1].score, 114);
-        assert.equal(paragraphishes[3].score, 146);
+        const facts = rules.against(doc);
+        const paragraphishes = facts.get(type('paragraphish'));
+        const paragraphishNodes = paragraphishes.map(fnode => fnode.element);
+        const clusts = clusters(paragraphishNodes, 3);
+        // TODO: Allow different cost coefficients to be passed into clusters().
+        // TODO: Probably promote someting like a "bestCluster()" to an in-
+        // ruleset aggregate function so its output can feed into other rules.
 
-//         assert.equal(clusters(paragraphishes),
-//                      [[paragraphishes[0],
-//                        paragraphishes[1]],
-//                       [paragraphishes[3]]]);
-        // Then pick the cluster with the highest sum of scores or the cluster around the highest-scoring node or the highest-scoring cluster by some formula (num typed nodes * scores of the nodes), and contiguous() it so things like ads are excluded but short paragraphs are included.
+        // Tag each cluster with the total of its paragraphs' scores:
+        const clustsAndSums = clusts.map(clust => [clust,
+                                                   sum(clust.map(para => facts.get(para).scoreFor('paragraphish')))]);
+        // TODO: Make clusters() take fnodes, not nodes, so we can call
+        // scoreFor directly on the fnode above.
+        // TODO: Once that's done, use score as part of the distance metric,
+        // which should tend to push outlier-sized paragraphs out of clusters,
+        // especially if they're separated topographically (like copyright
+        // notices).
+        const bestClust = max(clustsAndSums, clustAndSum => clustAndSum[1])[0];
+        const sortedBest = domSort(bestClust);
+        const snippets = sortedBest.map(p => p.textContent.trim().substr(0, 20));
+        assert.deepEqual(snippets,
+                         ['Once upon a time, th',
+                          'Sid dreamed of dough',
+                          'Did you ever trade a',
+                          'Hamstrung by ham-han']);
+        // Other ideas: We could pick the cluster around the highest-scoring
+        // node (which is more like what Readability does) or the highest-
+        // scoring cluster by some formula (num typed nodes * scores of the
+        // nodes), and contiguous() it so things like ads are excluded but
+        // short paragraphs are included.
     });
 });
 

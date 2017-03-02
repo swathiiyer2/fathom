@@ -273,9 +273,14 @@ class DistanceMatrix {
  *
  * Maybe later we'll consider score or notes.
  *
- * @arg {Array} elements An Array of DOM nodes
+ * @arg {Array} elements DOM nodes to break into clusters
  * @arg {number} tooFar The closest-nodes :func:`distance` beyond which we will
- *     not attempt to unify 2 clusters
+ *     not attempt to unify 2 clusters. Make this larger to make larger
+ *     clusters.
+ * @returns {Array} An Array of Arrays, with each Array containing all the
+ *     nodes in one cluster. Note that neither the clusters nor the nodes are
+ *     in any particular order. You may find :func:`domSort` helpful to remedy
+ *     the latter.
  */
 function clusters(elements, tooFar) {
     const matrix = new DistanceMatrix(elements);

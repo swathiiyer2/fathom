@@ -208,9 +208,9 @@ function collapseWhitespace(str) {
  * Return the ratio of the inline text length of the links in an element to the
  * inline text length of the entire element.
  */
-function linkDensity(node) {
-    const length = node.flavors.get('paragraphish').inlineLength;
-    const lengthWithoutLinks = inlineTextLength(node.element,
+function linkDensity(fnode) {
+    const length = fnode.noteFor('paragraphish').inlineLength;  // TODO: Remove hard-coded type.
+    const lengthWithoutLinks = inlineTextLength(fnode.element,
                                                 element => element.tagName !== 'A');
     return (length - lengthWithoutLinks) / length;
 }
@@ -365,10 +365,32 @@ function page(scoringFunction) {
     return wrapper;
 }
 
+/**
+ * Sort the elements by their position in the DOM.
+ *
+ * @arg elements {Array} DOM nodes to sort. They will be sorted in place.
+ * @return The original array, sorted
+ */
+function domSort(elements) {
+    function compare(a, b) {
+        const position = a.compareDocumentPosition(b);
+        if (position & a.DOCUMENT_POSITION_FOLLOWING) {
+            return -1;
+        } else if (position & a.DOCUMENT_POSITION_PRECEDING) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    elements.sort(compare);
+    return elements;
+}
+
 
 module.exports = {
     best,
     collapseWhitespace,
+    domSort,
     first,
     getDefault,
     identity,
