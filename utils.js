@@ -207,12 +207,17 @@ function collapseWhitespace(str) {
 /**
  * Return the ratio of the inline text length of the links in an element to the
  * inline text length of the entire element.
+ *
+ * @arg inlineLength {number} Optionally, the precalculated inline
+ *     length of the fnode. If omitted, we will calculate it ourselves.
  */
-function linkDensity(fnode) {
-    const length = fnode.noteFor('paragraphish').inlineLength;  // TODO: Remove hard-coded type.
+function linkDensity(fnode, inlineLength) {
+    if (inlineLength === undefined) {
+        inlineLength = inlineTextLength(fnode.element);
+    }
     const lengthWithoutLinks = inlineTextLength(fnode.element,
                                                 element => element.tagName !== 'A');
-    return (length - lengthWithoutLinks) / length;
+    return (inlineLength - lengthWithoutLinks) / inlineLength;
 }
 
 

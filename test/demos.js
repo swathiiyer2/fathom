@@ -110,7 +110,7 @@ describe('Design-driving demos', function () {
         `)));
     });
 
-    it("takes a decent shot at doing Readability's job", function () {
+    describe('finds content in a Readability-like fashion from', function () {
         // Potential advantages over readability:
         // * State clearly contained
         // * Should work fine with ideographic languages and others that lack
@@ -132,36 +132,6 @@ describe('Design-driving demos', function () {
             };
         }
 
-        const doc = jsdom(`
-            <div>
-                <h1>
-                    Welcome to here.
-                </h1>
-                <p>
-                    <a class="good" href="/things">Things</a> / <a class="bad" href="/things/tongs">Tongs</a>
-                </p>
-            </div>
-            <div id="lovelyContent">
-                <p>
-                    Once upon a time, there was a large bear named Sid. Sid was very large and bearish, and he had a bag of hammers.
-                </p>
-                <p>
-                    Sid dreamed of doughnuts--bear claws in particular--and wanted nothing more than to sink his stinking teeth into some. One day, Sid traded the bag of hammers to a serial scribbler named Sam for a dozen doughnuts. It was a good trade. Sid lived happily ever after.
-                </p>
-                <p>
-                    Did you ever trade a bag of hammers for something? What was it? What were you doing with a bag of hammers, anyway? Don't you know that keeping your hammers in a bag leads to chipped heads? What is wrong with you, anyway?
-                </p>
-                <p>
-                    Hamstrung by ham-handed dreams of hammers, you will hamhandedly hamper Hap's hangbag handbooks. You'll be handing out handbills by the handful until they handcuff you and handicap your handiwords. What, then, will become of your handkerchief handles?
-                </p>
-            </div>
-            <div>
-                <p>
-                    Hammers are copyright 1996.
-                </p>
-            </div>
-        `);
-
         // This set of rules is the beginning of something that works.
         // It's modeled after what I do when I try to do this by hand: I look
         // for balls of black text, and I look for them to be near each other,
@@ -181,7 +151,7 @@ describe('Design-driving demos', function () {
             // our leaning toward contiguousness.
 
             // Scale it by inverse of link density:
-            rule(type('paragraphish'), score(fnode => 1 - linkDensity(fnode))),
+            rule(type('paragraphish'), score(fnode => 1 - linkDensity(fnode, fnode.noteFor('paragraphish').inlineLength))),
 
             // Give bonuses for being in p tags.
             rule(dom('p'), score(1.5).type('paragraphish'))
@@ -189,36 +159,74 @@ describe('Design-driving demos', function () {
 
             // TODO: Ignore invisible nodes so people can't game with those.
         );
-        const facts = rules.against(doc);
-        const paragraphishes = facts.get(type('paragraphish'));
-        const paragraphishNodes = paragraphishes.map(fnode => fnode.element);
-        const clusts = clusters(paragraphishNodes, 3);
-        // TODO: Allow different cost coefficients to be passed into clusters().
-        // TODO: Probably promote someting like a "bestCluster()" to an in-
-        // ruleset aggregate function so its output can feed into other rules.
 
-        // Tag each cluster with the total of its paragraphs' scores:
-        const clustsAndSums = clusts.map(clust => [clust,
-                                                   sum(clust.map(para => facts.get(para).scoreFor('paragraphish')))]);
-        // TODO: Make clusters() take fnodes, not nodes, so we can call
-        // scoreFor directly on the fnode above.
-        // TODO: Once that's done, use score as part of the distance metric,
-        // which should tend to push outlier-sized paragraphs out of clusters,
-        // especially if they're separated topographically (like copyright
-        // notices).
-        const bestClust = max(clustsAndSums, clustAndSum => clustAndSum[1])[0];
-        const sortedBest = domSort(bestClust);
-        const snippets = sortedBest.map(p => p.textContent.trim().substr(0, 20));
-        assert.deepEqual(snippets,
-                         ['Once upon a time, th',
-                          'Sid dreamed of dough',
-                          'Did you ever trade a',
-                          'Hamstrung by ham-han']);
-        // Other ideas: We could pick the cluster around the highest-scoring
-        // node (which is more like what Readability does) or the highest-
-        // scoring cluster by some formula (num typed nodes * scores of the
-        // nodes), and contiguous() it so things like ads are excluded but
-        // short paragraphs are included.
+        // Return a 20-char snippet of each paragraph from a document's main
+        // textual content.
+        function snippetsFrom(doc) {
+            const facts = rules.against(doc);
+            const paragraphishes = facts.get(type('paragraphish'));
+            const paragraphishNodes = paragraphishes.map(fnode => fnode.element);
+            const clusts = clusters(paragraphishNodes, 3);
+            // TODO: Allow different cost coefficients to be passed into clusters().
+            // TODO: Probably promote someting like a "bestCluster()" to an in-
+            // ruleset aggregate function so its output can feed into other rules.
+
+            // Tag each cluster with the total of its paragraphs' scores:
+            const clustsAndSums = clusts.map(clust => [clust,
+                                                       sum(clust.map(para => facts.get(para).scoreFor('paragraphish')))]);
+            // TODO: Make clusters() take fnodes, not nodes, so we can call
+            // scoreFor directly on the fnode above.
+            // TODO: Once that's done, use score as part of the distance metric,
+            // which should tend to push outlier-sized paragraphs out of clusters,
+            // especially if they're separated topographically (like copyright
+            // notices).
+            const bestClust = max(clustsAndSums, clustAndSum => clustAndSum[1])[0];
+            const sortedBest = domSort(bestClust);
+            return sortedBest.map(p => p.textContent.trim().substr(0, 20));
+            // Other ideas: We could pick the cluster around the highest-scoring
+            // node (which is more like what Readability does) or the highest-
+            // scoring cluster by some formula (num typed nodes * scores of the
+            // nodes), and contiguous() it so things like ads are excluded but
+            // short paragraphs are included.
+        }
+
+        it('closely clustered runs of text', function () {
+            const doc = jsdom(`
+                <div>
+                    <h1>
+                        Welcome to here.
+                    </h1>
+                    <p>
+                        <a class="good" href="/things">Things</a> / <a class="bad" href="/things/tongs">Tongs</a>
+                    </p>
+                </div>
+                <div id="lovelyContent">
+                    <p>
+                        Once upon a time, there was a large bear named Sid. Sid was very large and bearish, and he had a bag of hammers.
+                    </p>
+                    <p>
+                        Sid dreamed of doughnuts--bear claws in particular--and wanted nothing more than to sink his stinking teeth into some. One day, Sid traded the bag of hammers to a serial scribbler named Sam for a dozen doughnuts. It was a good trade. Sid lived happily ever after.
+                    </p>
+                    <p>
+                        Did you ever trade a bag of hammers for something? What was it? What were you doing with a bag of hammers, anyway? Don't you know that keeping your hammers in a bag leads to chipped heads? What is wrong with you, anyway?
+                    </p>
+                    <p>
+                        Hamstrung by ham-handed dreams of hammers, you will ham-handedly hamper Hap's handbag handbooks. You'll be handing out handbills by the handful until they handcuff you and handicap your handiworks. What, then, will become of your handkerchief handles?
+                    </p>
+                </div>
+                <div>
+                    <p>
+                        Hammers are copyright 1996.
+                    </p>
+                </div>
+            `);
+
+            assert.deepEqual(snippetsFrom(doc),
+                             ['Once upon a time, th',
+                              'Sid dreamed of dough',
+                              'Did you ever trade a',
+                              'Hamstrung by ham-han']);
+        });
     });
 });
 
