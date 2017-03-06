@@ -43,23 +43,30 @@ function numStrides(left, right) {
  * This is largely an implementation detail of :func:`clusters`, but you can
  * call it yourself if you wish to implement your own clustering. Takes O(n log
  * n) time.
+ *
+ * Note that the default costs may change; pass them in explicitly if they are
+ * important to you.
+ *
+ * @arg differentDepthCost {number} Cost for each level deeper one node is than
+ *    the other below their common ancestor
+ * @arg differentTagCost {number} Cost for a level below the common ancestor
+ *    where tagNames differ
+ * @arg sameTagCost {number} Cost for a level below the common ancestor where
+ *    tagNames are the same
+ * @arg strideCost {number} Cost for each stride node between A and B
+ *
  */
-function distance(elementA, elementB) {
+function distance(elementA,
+                  elementB,
+                  {differentDepthCost = 2,
+                   differentTagCost = 2,
+                   sameTagCost = 1,
+                   strideCost = 1} = {}) {
     // I was thinking of something that adds little cost for siblings. Up
     // should probably be more expensive than down (see middle example in the
     // Nokia paper).
 
-    // TODO: Test and tune these costs. They're off-the-cuff at the moment.
-    //
-    // Cost for each level deeper one node is than the other below their common
-    // ancestor:
-    const DIFFERENT_DEPTH_COST = 2;
-    // Cost for a level below the common ancestor where tagNames differ:
-    const DIFFERENT_TAG_COST = 2;
-    // Cost for a level below the common ancestor where tagNames are the same:
-    const SAME_TAG_COST = 1;
-    // Cost for each stride node between A and B:
-    const STRIDE_COST = 1;
+    // TODO: Test and tune default costs. They're off the cuff at the moment.
 
     if (elementA === elementB) {
         return 0;
@@ -120,14 +127,14 @@ function distance(elementA, elementB) {
         if (l === undefined || r === undefined) {
             // Punishment for being at different depths: same as ordinary
             // dissimilarity punishment for now
-            cost += DIFFERENT_DEPTH_COST;
+            cost += differentDepthCost;
         } else {
             // TODO: Consider similarity of classList.
-            cost += l.tagName === r.tagName ? SAME_TAG_COST : DIFFERENT_TAG_COST;
+            cost += l.tagName === r.tagName ? sameTagCost : differentTagCost;
         }
         // Optimization: strides might be a good dimension to eliminate.
-        // TODO: Don't count stride nodes if STRIDE_COST is 0.
-        cost += numStrides(l, r) * STRIDE_COST;
+        // TODO: Don't count stride nodes if strideCost is 0.
+        cost += numStrides(l, r) * strideCost;
     }
 
     return cost;
@@ -135,10 +142,11 @@ function distance(elementA, elementB) {
 
 
 // A lower-triangular matrix of inter-cluster distances
-// TODO: Allow distance function to be passed in, making this generally useful
-// and not tied to the DOM.
 class DistanceMatrix {
-    constructor(elements) {
+    /**
+     * @arg distance {function} Some notion of distance between 2 given nodes
+     */
+    constructor(elements, distance) {
         // A sparse adjacency matrix:
         // {A => {},
         //  B => {A => 4},
@@ -146,7 +154,7 @@ class DistanceMatrix {
         //  D => {A => 4, B => 4, C => 4}
         //  E => {A => 4, B => 4, C => 4, D => 4}}
         //
-        // A, B, etc. are arrays of [arrays of arrays of...] DOM nodes, each
+        // A, B, etc. are arrays of [arrays of arrays of...] nodes, each
         // array being a cluster. In this way, they not only accumulate a
         // cluster but retain the steps along the way.
         //
@@ -280,13 +288,15 @@ class DistanceMatrix {
  * @arg {number} tooFar The closest-nodes :func:`distance` beyond which we will
  *     not attempt to unify 2 clusters. Make this larger to make larger
  *     clusters.
+ * @arg getDistance {function} A function that returns some notion of numerical
+ *    distance between 2 nodes. Default: :func:`distance`
  * @returns {Array} An Array of Arrays, with each Array containing all the
  *     nodes in one cluster. Note that neither the clusters nor the nodes are
  *     in any particular order. You may find :func:`domSort` helpful to remedy
  *     the latter.
  */
-function clusters(elements, tooFar) {
-    const matrix = new DistanceMatrix(elements);
+function clusters(elements, tooFar, getDistance = distance) {
+    const matrix = new DistanceMatrix(elements, getDistance);
     let closest;
 
     while (matrix.numClusters() > 1 && (closest = matrix.closest()).distance < tooFar) {

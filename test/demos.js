@@ -1,7 +1,7 @@
 const assert = require('chai').assert;
 const {jsdom} = require('jsdom');
 
-const {clusters} = require('../clusters');
+const {clusters, distance} = require('../clusters');
 const {dom, out, props, rule, ruleset, score, type} = require('../index');
 const {domSort, inlineTextLength, linkDensity, max, numberOfMatches, page, sum} = require('../utils');
 
@@ -157,7 +157,7 @@ describe('Design-driving demos', function () {
             rule(dom('p'), score(1.5).type('paragraphish'))
             // TODO: article tags, etc., too
 
-            // TODO: Ignore invisible nodes so people can't game with those.
+            // TODO: Ignore invisible nodes so people can't game us with those.
         );
 
         // Return a 20-char snippet of each paragraph from a document's main
@@ -166,10 +166,28 @@ describe('Design-driving demos', function () {
             const facts = rules.against(doc);
             const paragraphishes = facts.get(type('paragraphish'));
             const paragraphishNodes = paragraphishes.map(fnode => fnode.element);
-            const clusts = clusters(paragraphishNodes, 3);
-            // TODO: Allow different cost coefficients to be passed into clusters().
+            const clusts = clusters(
+                paragraphishNodes,
+                3,
+                (a, b) => distance(a, b, {differentDepthCost: 2,
+                                          differentTagCost: 2,
+                                          sameTagCost: 1,
+                                          strideCost: 1
+
+                                          // This is an addition to the distance
+                                          // function which makes nodes that have
+                                          // outlier lengths further away. It's meant to
+                                          // help filter out interstitials like ads.
+                                          // +1 to make a zero difference in length be 0
+                                          // /10 to bring (only) large differences in length into scale with the above costs
+                                          // additionalCost: (a, b) => Math.log(Math.abs(a.noteFor('paragraphish').inlineLength -
+                                          //                                             b.noteFor('paragraphish').inlineLength) / 10 + 1)
+                                          // TODO: Consider a logistic function instead of log.
+                }));
             // TODO: Probably promote someting like a "bestCluster()" to an in-
-            // ruleset aggregate function so its output can feed into other rules.
+            // ruleset aggregate function so its output can feed into other
+            // rules. It should take cost coefficients without requiring
+            // distance() itself to be wrapped and passed in.
 
             // Tag each cluster with the total of its paragraphs' scores:
             const clustsAndSums = clusts.map(clust => [clust,
