@@ -7,8 +7,10 @@ const {getDefault, setDefault} = require('./utils');
  * :term:`scores<score>`, and :term:`notes<note>` that apply to it
  */
 class Fnode {
-    // element: The DOM element I describe
-    // ruleset: The ruleset which created me
+    /**
+     * @arg element The DOM element I describe
+     * @arg ruleset The ruleset which created me
+     */
     constructor(element, ruleset) {
         if (element === undefined) {
             throw new Error("Someone tried to make a fnode without specifying the element they're talking about.");
@@ -75,8 +77,10 @@ class Fnode {
 
     // -------- Methods below this point are private to the framework. --------
 
-    // Return an iterable of the types tagged onto me by rules that have
-    // already executed.
+    /**
+     * Return an iterable of the types tagged onto me by rules that have
+     * already executed.
+     */
     typesSoFar() {
         return this._types.keys();
     }
@@ -93,15 +97,19 @@ class Fnode {
         return this._typeRecordForGetting(type).score;
     }
 
-    // Multiply one of our per-type scores by a given number. Implicitly assign
-    // us the given type.
+    /**
+     * Multiply one of our per-type scores by a given number. Implicitly assign
+     * us the given type.
+     */
     multiplyScoreFor(type, score) {
         this._typeRecordForSetting(type).score *= score;
     }
 
-    // Indicate that I should inherit some score from a LHS-emitted fnode. I
-    // keep track of (LHS fnode, type) pairs whose scores have already been
-    // inherited so we don't multiply them in more than once.
+    /**
+     * Indicate that I should inherit some score from a LHS-emitted fnode. I
+     * keep track of (LHS fnode, type) pairs whose scores have already been
+     * inherited so we don't multiply them in more than once.
+     */
     conserveScoreFrom(leftFnode, leftType, rightType) {
         let types;
         if (!(types = setDefault(this._conservedScores,
@@ -112,8 +120,10 @@ class Fnode {
         }
     }
 
-    // Set the note attached to one of our types. Implicitly assign us that
-    // type if we don't have it already.
+    /**
+     * Set the note attached to one of our types. Implicitly assign us that
+     * type if we don't have it already.
+     */
     setNoteFor(type, note) {
         if (this._hasNoteSoFarFor(type)) {
             if (note !== undefined) {
@@ -128,26 +138,31 @@ class Fnode {
         }
     }
 
-    // Return a score/note record for a type, creating it if it doesn't exist.
+    /**
+     * Return a score/note record for a type, creating it if it doesn't exist.
+     */
     _typeRecordForSetting(type) {
         return setDefault(this._types, type, () => ({score: 1}));
     }
 
-    // Manifest a temporary type record for reading, working around the lack of
-    // a .? operator in JS.
+    /**
+     * Manifest a temporary type record for reading, working around the lack of
+     * a .? operator in JS.
+     */
     _typeRecordForGetting(type) {
         return getDefault(this._types, type, () => ({score: 1}));
     }
 
-    // Make sure any scores, notes, and type-tagging for the given type are
-    // computed for my element.
+    /**
+     * Make sure any scores, notes, and type-tagging for the given type are
+     * computed for my element.
+     */
     _computeType(theType) {
         if (!this._types.has(theType)) {  // an unbenched optimization
             this._ruleset.get(type(theType));
         }
     }
 }
-
 
 module.exports = {
     Fnode

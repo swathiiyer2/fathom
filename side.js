@@ -6,37 +6,30 @@ function props(callback) {
     return new Side({method: 'props', args: [callback]});
 }
 
-
-// Constrain to an input type on the LHS, or apply a type on the RHS.
+/** Constrain to an input type on the LHS, or apply a type on the RHS. */
 function type(theType) {
     return new Side({method: 'type', args: [theType]});
 }
-
 
 function note(callback) {
     return new Side({method: 'note', args: [callback]});
 }
 
-
 function score(scoreOrCallback) {
     return new Side({method: 'score', args: [scoreOrCallback]});
 }
-
 
 function atMost(score) {
     return new Side({method: 'atMost', args: [score]});
 }
 
-
 function typeIn(...types) {
     return new Side({method: 'typeIn', args: types});
 }
 
-
 function conserveScore() {
     return new Side({method: 'conserveScore', args: []});
 }
-
 
 /**
  * Experimental. Pull nodes that conform to multiple conditions at once.
@@ -52,11 +45,12 @@ function and(...lhss) {
     return new Side({method: 'and', args: lhss});
 }
 
-
-// A chain of calls that can be compiled into a Rhs or Lhs, depending on its
-// position in a Rule. This lets us use type() as a leading call for both RHSs
-// and LHSs. I would prefer to do this dynamically, but that wouldn't compile
-// down to old versions of ES.
+/**
+ * A chain of calls that can be compiled into a Rhs or Lhs, depending on its
+ * position in a Rule. This lets us use type() as a leading call for both RHSs
+ * and LHSs. I would prefer to do this dynamically, but that wouldn't compile
+ * down to old versions of ES.
+ */
 class Side {
     constructor(...calls) {
         // A "call" is like {method: 'dom', args: ['p.smoo']}.
@@ -118,7 +112,6 @@ class Side {
         return side;
     }
 }
-
 
 module.exports = {
     and,

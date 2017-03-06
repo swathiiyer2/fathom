@@ -2,14 +2,16 @@ const {flatten} = require('wu');
 const {isWhitespace, min} = require('./utils');
 
 
-// Return the number of stride nodes between 2 DOM nodes *at the same
-// level of the tree*, without going up or down the tree.
-//
-// Stride nodes are {(1) siblings or (2) siblings of ancestors} that lie
-// between the 2 nodes. These interposed nodes make it less likely that the 2
-// nodes should be together in a cluster.
-//
-// left xor right may also be undefined.
+/**
+ * Return the number of stride nodes between 2 DOM nodes *at the same
+ * level of the tree*, without going up or down the tree.
+ *
+ * Stride nodes are {(1) siblings or (2) siblings of ancestors} that lie
+ * between the 2 nodes. These interposed nodes make it less likely that the 2
+ * nodes should be together in a cluster.
+ *
+ * ``left`` xor ``right`` may also be undefined.
+ */
 function numStrides(left, right) {
     let num = 0;
 
@@ -35,7 +37,6 @@ function numStrides(left, right) {
     }
     return num;
 }
-
 
 /**
  * Return a distance measurement between 2 DOM nodes.
@@ -140,8 +141,7 @@ function distance(elementA,
     return cost;
 }
 
-
-// A lower-triangular matrix of inter-cluster distances
+/** A lower-triangular matrix of inter-cluster distances */
 class DistanceMatrix {
     /**
      * @arg distance {function} Some notion of distance between 2 given nodes
@@ -272,7 +272,6 @@ class DistanceMatrix {
     }
 }
 
-
 /**
  * Partition the given nodes into one or more clusters by position in the DOM
  * tree.
@@ -290,7 +289,7 @@ class DistanceMatrix {
  *     clusters.
  * @arg getDistance {function} A function that returns some notion of numerical
  *    distance between 2 nodes. Default: :func:`distance`
- * @returns {Array} An Array of Arrays, with each Array containing all the
+ * @return {Array} An Array of Arrays, with each Array containing all the
  *     nodes in one cluster. Note that neither the clusters nor the nodes are
  *     in any particular order. You may find :func:`domSort` helpful to remedy
  *     the latter.
@@ -305,7 +304,6 @@ function clusters(elements, tooFar, getDistance = distance) {
 
     return matrix.clusters();
 }
-
 
 module.exports = {
     clusters,

@@ -16,7 +16,6 @@ const SUBFACTS = {
     conserveScore: CONSERVE_SCORE
 };
 
-
 /**
  * Expose the output of this rule's LHS as a "final result" to the surrounding
  * program. It will be available by calling :func:`~BoundRuleset.get` on the
@@ -26,7 +25,6 @@ const SUBFACTS = {
 function out(key) {
     return new OutwardRhs(key);
 }
-
 
 class InwardRhs {
     constructor(calls = [], max = Infinity, types) {
@@ -138,10 +136,12 @@ class InwardRhs {
                                     types);
     }
 
-    // Check a fact for conformance with any typeIn() call.
-    //
-    // leftType: the type of the LHS, which becomes my emitted type if the fact
-    //     doesn't specify one
+    /**
+     * Check a fact for conformance with any typeIn() call.
+     *
+     * @arg leftType the type of the LHS, which becomes my emitted type if the
+     *    fact doesn't specify one
+     */
     _checkTypeIn(result, leftType) {
         if (this._types.size > 0) {
             if (result.type === undefined) {
@@ -227,13 +227,15 @@ class InwardRhs {
 
     // -------- Methods below this point are private to the framework. --------
 
-    // Run all my props().type().note().score() stuff across a given fnode,
-    // enforce my max() stuff, and return a fact ({element, type, score,
-    // notes}) for incorporation into that fnode (or a different one, if
-    // element is specified). Any of the 4 fact properties can be missing;
-    // filling in defaults is a job for the caller.
-    //
-    // leftType: the type the LHS takes in
+    /**
+     * Run all my props().type().note().score() stuff across a given fnode,
+     * enforce my max() stuff, and return a fact ({element, type, score,
+     * notes}) for incorporation into that fnode (or a different one, if
+     * element is specified). Any of the 4 fact properties can be missing;
+     * filling in defaults is a job for the caller.
+     *
+     * @arg leftType The type the LHS takes in
+     */
     fact(fnode, leftType) {
         const doneKinds = new Set();
         const result = {};
@@ -263,11 +265,13 @@ class InwardRhs {
         return result;
     }
 
-    // Return a record describing the types I might emit (which means either to
-    // add a type to a fnode or to output a fnode that already has that type).
-    // {couldChangeType: whether I might add a type to the fnode,
-    //  possibleTypes: If couldChangeType, the types I might emit; empty set if
-    //      we cannot infer it. If not couldChangeType, undefined.}
+    /**
+     * Return a record describing the types I might emit (which means either to
+     * add a type to a fnode or to output a fnode that already has that type).
+     * {couldChangeType: whether I might add a type to the fnode,
+     *  possibleTypes: If couldChangeType, the types I might emit; empty set if
+     *      we cannot infer it. If not couldChangeType, undefined.}
+     */
     possibleEmissions() {
         // If there is a typeIn() constraint or there is a type() call to the
         // right of all props() calls, we have a constraint. We hunt for the
@@ -287,7 +291,6 @@ class InwardRhs {
                 possibleTypes: this._types};
     }
 }
-
 
 class OutwardRhs {
     constructor(key, through = x => x) {
@@ -310,7 +313,6 @@ class OutwardRhs {
         return this;
     }
 }
-
 
 module.exports = {
     InwardRhs,

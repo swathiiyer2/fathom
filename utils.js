@@ -10,7 +10,6 @@ function identity(x) {
     return x;
 }
 
-
 /**
  * From an iterable return the best item, according to an arbitrary comparator
  * function. In case of a tie, the first item wins.
@@ -38,7 +37,6 @@ function best(iterable, by, isBetter) {
     return bestSoFar;
 }
 
-
 /**
  * Return the maximum item from an iterable, as defined by >.
  *
@@ -51,7 +49,6 @@ function best(iterable, by, isBetter) {
 function max(iterable, by = identity) {
     return best(iterable, by, (a, b) => a > b);
 }
-
 
 /**
  * Return an Array of maximum items from an iterable, as defined by > and ===.
@@ -77,7 +74,6 @@ function maxes(iterable, by = identity) {
     return bests;
 }
 
-
 /**
  * Return the minimum item from an iterable, as defined by <.
  *
@@ -87,7 +83,6 @@ function maxes(iterable, by = identity) {
 function min(iterable, by = identity) {
     return best(iterable, by, (a, b) => a < b);
 }
-
 
 /**
  * Return the sum of an iterable, as defined by the + operator.
@@ -108,7 +103,6 @@ function sum(iterable) {
     return total;
 }
 
-
 /**
  * Return the number of items in an iterable, consuming it as a side effect.
  */
@@ -120,7 +114,6 @@ function length(iterable) {
     }
     return num;
 }
-
 
 /**
  * Iterate, depth first, over a DOM node. Return the original node first.
@@ -139,7 +132,6 @@ function *walk(element, shouldTraverse) {
     }
 }
 
-
 const blockTags = new Set();
 forEach(blockTags.add.bind(blockTags),
         ['ADDRESS', 'BLOCKQUOTE', 'BODY', 'CENTER', 'DIR', 'DIV', 'DL',
@@ -154,7 +146,6 @@ forEach(blockTags.add.bind(blockTags),
 function isBlock(element) {
     return blockTags.has(element.tagName);
 }
-
 
 /**
  * Yield strings of text nodes within a normalized DOM node and its children,
@@ -182,7 +173,6 @@ function *inlineTexts(element, shouldTraverse = element => true) {
     }
 }
 
-
 /**
  * Return the total length of the inline text within an element, with
  * whitespace collapsed.
@@ -195,14 +185,12 @@ function inlineTextLength(element, shouldTraverse = element => true) {
                    inlineTexts(element, shouldTraverse)));
 }
 
-
 /**
  * Return a string with each run of whitespace collapsed to a single space.
  */
 function collapseWhitespace(str) {
     return str.replace(/\s{2,}/g, ' ');
 }
-
 
 /**
  * Return the ratio of the inline text length of the links in an element to the
@@ -220,7 +208,6 @@ function linkDensity(fnode, inlineLength) {
     return (inlineLength - lengthWithoutLinks) / inlineLength;
 }
 
-
 /**
  * Return whether an element is a text node that consist wholly of whitespace.
  */
@@ -228,7 +215,6 @@ function isWhitespace(element) {
     return (element.nodeType === element.TEXT_NODE &&
             element.textContent.trim().length === 0);
 }
-
 
 /**
  * Get a key of a map, first setting it to a default value if it's missing.
@@ -242,7 +228,6 @@ function setDefault(map, key, defaultMaker) {
     return defaultValue;
 }
 
-
 /**
  * Get a key of a map or, if it's missing, a default value.
  */
@@ -253,7 +238,6 @@ function getDefault(map, key, defaultMaker) {
     return defaultMaker();
 }
 
-
 /**
  * Return an backward iterator over an Array.
  */
@@ -262,7 +246,6 @@ function *reversed(array) {
         yield array[i];
     }
 }
-
 
 /**
  * Return an Array, the reverse topological sort of the given nodes.
@@ -297,7 +280,6 @@ function toposort(nodes, nodesThatNeed) {
     return ret;
 }
 
-
 /**
  * A Set with the additional methods it ought to have had
  */
@@ -318,7 +300,6 @@ class NiceSet extends Set {
     }
 }
 
-
 /**
  * Return the first item of an iterable.
  */
@@ -327,7 +308,6 @@ function first(iterable) {
         return i;
     }
 }
-
 
 /**
  * Given any node in a DOM tree, return the root element of the tree, generally
@@ -341,7 +321,6 @@ function rootElement(element) {
     return element;
 }
 
-
 /**
  * Return the number of times a regex occurs within the string `haystack`.
  *
@@ -350,7 +329,6 @@ function rootElement(element) {
 function numberOfMatches(regex, haystack) {
     return (haystack.match(regex) || []).length;
 }
-
 
 /**
  * Wrap a scoring callback, and set its element to the page root iff a score is
@@ -374,7 +352,7 @@ function page(scoringFunction) {
  * Sort the elements by their position in the DOM.
  *
  * @arg elements {Array} DOM nodes to sort. They will be sorted in place.
- * @return The original array, sorted
+ * @return the original array, sorted
  */
 function domSort(elements) {
     function compare(a, b) {
@@ -390,7 +368,6 @@ function domSort(elements) {
     elements.sort(compare);
     return elements;
 }
-
 
 module.exports = {
     best,

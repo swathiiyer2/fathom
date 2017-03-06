@@ -14,21 +14,22 @@ function dom(selector) {
     return new DomLhs(selector);
 }
 
-
-// Rules and the LHSs and RHSs that comprise them have no mutable state. This
-// lets us make BoundRulesets from Rulesets without duplicating the rules. It
-// also lets us share a common cache among rules: multiple ones might care
-// about a cached type(), for instance; there isn't a one-to-one relationship
-// of storing with caring. There would also, because of the interdependencies
-// of rules in a ruleset, be little use in segmenting the caches: if you do
-// something that causes one to need to be cleared, you'll need to clear many
-// more as well.
-//
-// Lhses are responsible for maintaining ruleset.maxCache.
-//
-// Lhs and its subclasses are private to the Fathom framework.
+/**
+ * Rules and the LHSs and RHSs that comprise them have no mutable state. This
+ * lets us make BoundRulesets from Rulesets without duplicating the rules. It
+ * also lets us share a common cache among rules: multiple ones might care
+ * about a cached type(), for instance; there isn't a one-to-one relationship
+ * of storing with caring. There would also, because of the interdependencies
+ * of rules in a ruleset, be little use in segmenting the caches: if you do
+ * something that causes one to need to be cleared, you'll need to clear many
+ * more as well.
+ *
+ * Lhses are responsible for maintaining ruleset.maxCache.
+ *
+ * Lhs and its subclasses are private to the Fathom framework.
+ */
 class Lhs {
-    // Return a new Lhs of the appropriate kind, given its first call.
+    /** Return a new Lhs of the appropriate kind, given its first call. */
     static fromFirstCall(firstCall) {
         // firstCall is never 'dom', because dom() directly returns a DomLhs.
         if (firstCall.method === 'type') {
@@ -40,7 +41,6 @@ class Lhs {
         }
     }
 
-
     // Return an iterable of output fnodes selected by this left-hand-side
     // expression.
     //
@@ -50,24 +50,29 @@ class Lhs {
     // ruleset: a BoundRuleset
     // fnodes (ruleset)
 
-    // Check that a RHS-emitted fact is legal for this kind of LHS, and throw
-    // an error if it isn't.
+    /**
+     * Check that a RHS-emitted fact is legal for this kind of LHS, and throw
+     * an error if it isn't.
+     */
     checkFact(fact) {
     }
 
-    // Return the single type the output of the LHS is guaranteed to have.
-    // Return undefined if there is no such single type we can ascertain.
+    /**
+     * Return the single type the output of the LHS is guaranteed to have.
+     * Return undefined if there is no such single type we can ascertain.
+     */
     guaranteedType() {
     }
 
-    // Return an iterable of rules that need to run in order to compute my
-    // inputs, undefined if we can't tell without also consulting the RHS or if
-    // the necessary prereqs are missing from the ruleset.
+    /**
+     * Return an iterable of rules that need to run in order to compute my
+     * inputs, undefined if we can't tell without also consulting the RHS or if
+     * the necessary prereqs are missing from the ruleset.
+     */
     prerequisites(ruleset) {
         return undefined;
     }
 }
-
 
 class DomLhs extends Lhs {
     constructor(selector) {
@@ -103,8 +108,7 @@ class DomLhs extends Lhs {
     }
 }
 
-
-// Internal representation of a LHS constrained by type but not by max()
+/** Internal representation of a LHS constrained by type but not by max() */
 class TypeLhs extends Lhs {
     constructor(type) {
         super();
@@ -118,7 +122,7 @@ class TypeLhs extends Lhs {
         return getDefault(ruleset.typeCache, this._type, () => []);
     }
 
-    // Override the type previously specified by this constraint.
+    /** Override the type previously specified by this constraint. */
     type(inputType) {
         // Preserve the class in case this is a TypeMaxLhs.
         return new this.constructor(inputType);
@@ -138,12 +142,15 @@ class TypeLhs extends Lhs {
     }
 }
 
-
-// Internal representation of a LHS that has both type and max([NUMBER])
-// constraints. max(NUMBER != 1) support is not yet implemented.
+/**
+ * Internal representation of a LHS that has both type and max([NUMBER])
+ * constraints. max(NUMBER != 1) support is not yet implemented.
+ */
 class TypeMaxLhs extends TypeLhs {
-    // Return the max-scoring node (or nodes if there is a tie) of the given
-    // type.
+    /**
+     * Return the max-scoring node (or nodes if there is a tie) of the given
+     * type.
+     */
     fnodes(ruleset) {
         // TODO: Optimize better. Walk the dependency tree, and run only the
         // rules that could possibly lead to a max result. As part of this,
@@ -165,7 +172,6 @@ class TypeMaxLhs extends TypeLhs {
         return ruleset.inwardRulesThatCouldEmit(this._type);
     }
 }
-
 
 class AndLhs extends Lhs {
     constructor(lhss) {
@@ -203,7 +209,9 @@ class AndLhs extends Lhs {
         }
     }
 
-    // We require all rules that emit any of the types mentioned in my args.
+    /**
+     * We require all rules that emit any of the types mentioned in my args.
+     */
     prerequisites(ruleset) {
         // TODO: Come up with a stricter set of prereqs. and('A') -> type('A')
         // is equivalent to A -> A, which depends on only adders, not emitters.
@@ -218,7 +226,6 @@ class AndLhs extends Lhs {
         return prereqs;
     }
 }
-
 
 module.exports = {
     dom,

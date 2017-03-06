@@ -18,14 +18,12 @@ function rule(lhs, rhs) {
     return new ((rhs instanceof OutwardRhs) ? OutwardRule : InwardRule)(lhs, rhs);
 }
 
-
 /**
  * Return a new :class:`Ruleset` containing the given rules.
  */
 function ruleset(...rules) {
     return new Ruleset(...rules);
 }
-
 
 /**
  * An unbound ruleset. Eventually, you'll be able to add rules to these. Then,
@@ -88,7 +86,6 @@ class Ruleset {
     }
 }
 
-
 /**
  * A ruleset that is earmarked to analyze a certain DOM
  *
@@ -96,8 +93,10 @@ class Ruleset {
  * :func:`Ruleset.against`.
  */
 class BoundRuleset {
-    // inRules: an Array of non-out() rules
-    // outRules: a Map of output keys to out() rules
+    /**
+     * @arg inRules {Array} Non-out() rules
+     * @arg outRules {Map} Output key -> out() rule
+     */
     constructor(doc, inRules, outRules, rulesThatCouldEmit, rulesThatCouldAdd) {
         this.doc = doc;
         this._inRules = inRules;
@@ -156,8 +155,10 @@ class BoundRuleset {
 
     // -------- Methods below this point are private to the framework. --------
 
-    // Return all the thus-far-unexecuted rules that will have to run to run
-    // the requested rule, in the form of Map(prereq: [rulesItIsNeededBy]).
+    /**
+     * Return all the thus-far-unexecuted rules that will have to run to run
+     * the requested rule, in the form of Map(prereq: [rulesItIsNeededBy]).
+     */
     _prerequisitesTo(rule, undonePrereqs = new Map()) {
         for (let prereq of rule.prerequisites(this)) {
             if (!this.doneRules.has(prereq)) {
@@ -178,21 +179,23 @@ class BoundRuleset {
         return undonePrereqs;
     }
 
-    // Run the given rule (and its dependencies, in the proper order), and
-    // return its results.
-    //
-    // The caller is responsible for ensuring that _execute() is not called
-    // more than once for a given InwardRule, lest non-idempotent
-    // transformations, like score multiplications, be applied to fnodes more
-    // than once.
-    //
-    // The basic idea is to sort rules in topological order (according to input
-    // and output types) and then run them. On top of that, we do some
-    // optimizations. We keep a cache of results by type (whether partial or
-    // comprehensive--either way, the topology ensures that any
-    // non-comprehensive typeCache entry is made comprehensive before another
-    // rule needs it). And we prune our search for prerequisite rules at the
-    // first encountered already-executed rule.
+    /**
+     * Run the given rule (and its dependencies, in the proper order), and
+     * return its results.
+     *
+     * The caller is responsible for ensuring that _execute() is not called
+     * more than once for a given InwardRule, lest non-idempotent
+     * transformations, like score multiplications, be applied to fnodes more
+     * than once.
+     *
+     * The basic idea is to sort rules in topological order (according to input
+     * and output types) and then run them. On top of that, we do some
+     * optimizations. We keep a cache of results by type (whether partial or
+     * comprehensive--either way, the topology ensures that any
+     * non-comprehensive typeCache entry is made comprehensive before another
+     * rule needs it). And we prune our search for prerequisite rules at the
+     * first encountered already-executed rule.
+     */
     _execute(rule) {
         const prereqs = this._prerequisitesTo(rule);
         let sorted;
@@ -214,17 +217,17 @@ class BoundRuleset {
         return Array.from(fnodes);
     }
 
-    // Return an Array of rules.
+    /** @return an Array of rules */
     inwardRulesThatCouldEmit(type) {
         return this._rulesThatCouldEmit.get(type);
     }
 
-    // Return an Array of rules.
+    /** @return an Array of rules */
     inwardRulesThatCouldAdd(type) {
         return this._rulesThatCouldAdd.get(type);
     }
 
-    // Return the Fathom node that describes the given DOM element.
+    /** @return the Fathom node that describes the given DOM element */
     fnodeForElement(element) {
         return setDefault(this.elementCache,
                           element,
@@ -232,26 +235,29 @@ class BoundRuleset {
     }
 }
 
-
-// We place the in/out distinction in Rules because it determines whether the
-// RHS result is cached, and Rules are responsible for maintaining the rulewise
-// cache ruleset.ruleCache.
+/**
+ * We place the in/out distinction in Rules because it determines whether the
+ * RHS result is cached, and Rules are responsible for maintaining the rulewise
+ * cache ruleset.ruleCache.
+ */
 class Rule {  // abstract
     constructor(lhs, rhs) {
         this.lhs = lhs.asLhs();
         this.rhs = rhs.asRhs();
     }
 
-    // Return an Array of the rules that this one depends on in the given
-    // ruleset. This may include rules that have already been executed in a
-    // BoundRuleset.
-    //
-    // The rules are these, where A is a type:
-    // * A.max->* depends on anything emitting A.
-    // * A->A depends on anything adding A.
-    // * A->* (including (A->out(…)) depends on anything emitting A. (For
-    //   example, we need the A score finalized before we could transfer it to
-    //   B using conserveScore().)
+    /**
+     * Return an Array of the rules that this one depends on in the given
+     * ruleset. This may include rules that have already been executed in a
+     * BoundRuleset.
+     *
+     * The rules are these, where A is a type:
+     * * A.max->* depends on anything emitting A.
+     * * A->A depends on anything adding A.
+     * * A->* (including (A->out(…)) depends on anything emitting A. (For
+     *   example, we need the A score finalized before we could transfer it to
+     *   B using conserveScore().)
+     */
     prerequisites(ruleset) {
         // Some LHSs know enough to determine their own prereqs:
         const delegated = this.lhs.prerequisites(ruleset);
@@ -282,16 +288,19 @@ class Rule {  // abstract
     }
 }
 
-
-// A normal rule, whose results head back into the Fathom knowledgebase, to be
-// operated on by further rules.
+/**
+ * A normal rule, whose results head back into the Fathom knowledgebase, to be
+ * operated on by further rules.
+ */
 class InwardRule extends Rule {
     // TODO: On construct, complain about useless rules, like a dom() rule that
     // doesn't assign a type.
 
-    // Return an iterable of the fnodes emitted by the RHS of this rule.
-    // Side effect: update ruleset's store of fnodes, its accounting of which
-    // rules are done executing, and its cache of results per type.
+    /**
+     * Return an iterable of the fnodes emitted by the RHS of this rule.
+     * Side effect: update ruleset's store of fnodes, its accounting of which
+     * rules are done executing, and its cache of results per type.
+     */
     results(ruleset) {
         if (ruleset.doneRules.has(this)) {  // shouldn't happen
             throw new Error('A bug in Fathom caused results() to be called on an inward rule twice. That could cause redundant score multiplications, etc.');
@@ -362,9 +371,11 @@ class InwardRule extends Rule {
         return returnedFnodes.values();
     }
 
-    // Return a Set of the types that could be emitted back into the system.
-    // To emit a type means to either to add it to a fnode emitted from the RHS
-    // or to leave it on such a fnode where it already exists.
+    /**
+     * Return a Set of the types that could be emitted back into the system.
+     * To emit a type means to either to add it to a fnode emitted from the RHS
+     * or to leave it on such a fnode where it already exists.
+     */
     typesItCouldEmit() {
         const rhs = this.rhs.possibleEmissions();
         if (!rhs.couldChangeType && this.lhs.guaranteedType() !== undefined) {
@@ -378,8 +389,10 @@ class InwardRule extends Rule {
         }
     }
 
-    // Return a Set of types I could add to fnodes I output (where the fnodes
-    // did not already have them).
+    /**
+     * Return a Set of types I could add to fnodes I output (where the fnodes
+     * did not already have them).
+     */
     typesItCouldAdd() {
         const ret = new Set(this.typesItCouldEmit());
         ret.delete(this.lhs.guaranteedType());
@@ -387,31 +400,37 @@ class InwardRule extends Rule {
     }
 }
 
-
-// A rule whose RHS is an out(). This represents a final goal of a ruleset.
-// Its results go out into the world, not inward back into the Fathom
-// knowledgebase.
+/**
+ * A rule whose RHS is an out(). This represents a final goal of a ruleset.
+ * Its results go out into the world, not inward back into the Fathom
+ * knowledgebase.
+ */
 class OutwardRule extends Rule {
-    // Compute the whole thing, including any .through().
-    // Do not mark me done in ruleset.doneRules; out rules are never marked as
-    // done so they can be requested many times without having to cache their
-    // (potentially big, since they aren't necessarily fnodes?) results. (We
-    // can add caching later if it proves beneficial.)
+    /**
+     * Compute the whole thing, including any .through().
+     * Do not mark me done in ruleset.doneRules; out rules are never marked as
+     * done so they can be requested many times without having to cache their
+     * (potentially big, since they aren't necessarily fnodes?) results. (We
+     * can add caching later if it proves beneficial.)
+     */
     results(ruleset) {
         return map(this.rhs.callback, this.lhs.fnodes(ruleset));
     }
 
-    // Return the key under which the output of this rule will be available.
+    /**
+     * @return the key under which the output of this rule will be available
+     */
     key() {
         return this.rhs.key;
     }
 
-    // Return an empty Set, since we don't emit anything back into the system.
+    /**
+     * @return an empty Set, since we don't emit anything back into the system
+     */
     typesItCouldEmit() {
         return new Set();
     }
 }
-
 
 module.exports = {
     rule,
