@@ -2,6 +2,14 @@
 Version History
 ===============
 
+2.1
+===
+
+* Let costs be passed into distance() and clusters() so we can tune them per ruleset.
+* Add nice documentation using Sphinx.
+* Get the Chrome debugger working with our tests again (``make debugtest``).
+* Officially support operating on DOM subtrees (which did work previously).
+
 2.0
 ===
 The focii for 2.0 are syntactic sugar and support for larger, more powerful rulesets that can operate at higher levels of abstraction. From these priorities spring all of the following:
