@@ -15,6 +15,8 @@ This will also run the linter and analyze test coverage. You can find the covera
 
 If you're in the midst of a tornado of rapid development and the fancy stuff is too slow, you can invoke ``make test`` to run "just the tests, ma'am".
 
+And if you want to drop into the debugger in the middle of a test, add a ``debugger;`` statement at your desired breakpoint, then run ``make debugtest``.
+
 Docs
 ====
 

@@ -5,7 +5,7 @@ Glossary
 .. glossary::
 
    fnode
-       A data structure parallel to a DOM node, holding :term:`scores<score>`, :term:`notes<note>`, and :term:`types<type>` pertaining to it.
+       A data structure parallel to a DOM node, holding :term:`scores<score>`, :term:`notes<note>`, and :term:`types<type>` pertaining to it. See :doc:`fnodes`.
 
    note
        An arbitrary, opaque-to-Fathom piece of data attached to a given :term:`type` on a :term:`fnode`. Notes can be consulted by scoring callbacks and are a good place to park expensive-to-recompute information. They are the main way of passing data between rules.
