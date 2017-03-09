@@ -226,7 +226,7 @@ describe('Design-driving demos', function () {
 
         /** Return the edit distance between 2 strings. */
         function textualDistance(s, t) {
-            const changes = diffChars(s + "\n", t + "\n");
+            const changes = diffChars(s + '\n', t + '\n');
             return sum(changes.map(c => (c.added || c.removed) ? c.value.length : 0));
         }
 
@@ -365,7 +365,7 @@ describe('Design-driving demos', function () {
 
         after(function () {
             const score = diffScore();
-            console.log('\n      In total: ' + score.toFixed(1) + '% different than perfect');
+            console.log('\n      In total: ' + score.toFixed(1) + '% different than perfect');  // eslint-disable-line no-console
             // We keep dropping this as we get better, to prevent regressions:
             assert.isBelow(score, 999);
         });
