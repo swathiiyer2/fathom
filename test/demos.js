@@ -1,4 +1,5 @@
 const assert = require('chai').assert;
+const {diffChars} = require('diff');  // Consider leven package if this is slow.
 const {jsdom} = require('jsdom');
 
 const {clusters, distance} = require('../clusters');
@@ -122,6 +123,8 @@ describe('Design-driving demos', function () {
         // * Potential to perform better since it doesn't have to run over and
         //   over, loosening constraints each time, if it fails
 
+        // ---------------------- The actual algorithm: -----------------------
+
         // Score a node based on how much text is directly inside it and its
         // inline-tag children.
         function scoreByLength(fnode) {
@@ -160,9 +163,8 @@ describe('Design-driving demos', function () {
             // TODO: Ignore invisible nodes so people can't game us with those.
         );
 
-        // Return a 20-char snippet of each paragraph from a document's main
-        // textual content.
-        function snippetsFrom(doc) {
+        // Return the nodes expressing a document's main textual content.
+        function contentNodes(doc) {
             const facts = rules.against(doc);
             const paragraphishes = facts.get(type('paragraphish'));
             const paragraphishNodes = paragraphishes.map(fnode => fnode.element);
@@ -199,14 +201,65 @@ describe('Design-driving demos', function () {
             // especially if they're separated topographically (like copyright
             // notices).
             const bestClust = max(clustsAndSums, clustAndSum => clustAndSum[1])[0];
-            const sortedBest = domSort(bestClust);
-            return sortedBest.map(p => p.textContent.trim().substr(0, 20).trim());
+            return domSort(bestClust);
             // Other ideas: We could pick the cluster around the highest-scoring
             // node (which is more like what Readability does) or the highest-
             // scoring cluster by some formula (num typed nodes * scores of the
             // nodes), and contiguous() it so things like ads are excluded but
             // short paragraphs are included.
         }
+
+        // ---------------------- Test helper routines: -----------------------
+
+        /** Return the concatenated textual content of an entire DOM tree. */
+        function textContent(dom) {
+            // dom.textContent crashes. dom.firstChild is always an HTML element in
+            // jsdom, even if you didn't include one.
+            return dom.firstChild.textContent;
+        }
+
+        /** Remove leading and trailing whitespace from each line of a string. */
+        function trimLines(str) {
+            const lines = str.split('\n');
+            return lines.map(l => l.trim()).join('\n');
+        }
+
+        /** Return the edit distance between 2 strings. */
+        function textualDistance(s, t) {
+            const changes = diffChars(s + "\n", t + "\n");
+            return sum(changes.map(c => (c.added || c.removed) ? c.value.length : 0));
+        }
+
+        /**
+         * Return a 20-char snippet of each node from a document's main
+         * textual content.
+         */
+        function snippetsFrom(doc) {
+            return contentNodes(doc).map(p => p.textContent.trim().substr(0, 20).trim());
+        }
+
+        let lengthOfExpectedTexts = 0;
+        let lengthOfDiffs = 0;
+        /**
+         * Measure the difference between 2 DOM trees for the purpose of human
+         * reading, and sock it away to produce a total score later.
+         *
+         * This will get continually pickier over time as we run up against the
+         * limits of its discriminatory power.
+         */
+        function compare(expected, got) {
+            // Currently, this is just a surrounding-whitespace-insensitive
+            // comparison of the text content.
+            const expectedText = trimLines(textContent(expected));
+            const gotText = trimLines(textContent(got));
+            lengthOfExpectedTexts += expectedText.length;
+            lengthOfDiffs += textualDistance(expectedText, gotText);
+        }
+        function diffScore() {
+            return lengthOfDiffs / lengthOfExpectedTexts * 100;
+        }
+
+        // ----------------------------- Tests: -------------------------------
 
         it('closely clustered runs of text', function () {
             const doc = jsdom(`
@@ -298,6 +351,23 @@ describe('Design-driving demos', function () {
             `);
             assert.deepEqual(snippetsFrom(doc),
                              ['Smoo bars.', 'Mangaroo. Witches an', 'Bing bang, I saw the']);
+        });
+
+        it('validates diff-scoring function', function () {
+            const expected = jsdom(`
+                <div>A</div>
+            `);
+            const got = jsdom(`
+                <div>B</div>
+            `);
+            compare(expected, got);
+        });
+
+        after(function () {
+            const score = diffScore();
+            console.log('\n      In total: ' + score.toFixed(1) + '% different than perfect');
+            // We keep dropping this as we get better, to prevent regressions:
+            assert.isBelow(score, 999);
         });
     });
 });
