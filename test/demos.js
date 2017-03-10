@@ -2,7 +2,7 @@ const {readFileSync} = require('fs');
 const {join} = require('path');
 
 const assert = require('chai').assert;
-const {diffChars} = require('diff');  // Consider leven package if this is slow.
+const leven = require('leven');
 const {jsdom} = require('jsdom');
 
 const {clusters, distance} = require('../clusters');
@@ -229,8 +229,7 @@ describe('Design-driving demos', function () {
 
         /** Return the edit distance between 2 strings. */
         function textualDistance(s, t) {
-            const changes = diffChars(s + '\n', t + '\n');
-            return sum(changes.map(c => (c.added || c.removed) ? c.value.length : 0));
+            return leven(s, t);
         }
 
         /**
