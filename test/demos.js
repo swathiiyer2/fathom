@@ -1,3 +1,6 @@
+const {readFileSync} = require('fs');
+const {join} = require('path');
+
 const assert = require('chai').assert;
 const {diffChars} = require('diff');  // Consider leven package if this is slow.
 const {jsdom} = require('jsdom');
@@ -143,7 +146,7 @@ describe('Design-driving demos', function () {
             // Score on text length -> paragraphish. We start with this
             // because, no matter the other markup details, the main body text
             // is definitely going to have a bunch of text.
-            rule(dom('p,div'), props(scoreByLength).type('paragraphish')),
+            rule(dom('p,div,li,code,blockquote'), props(scoreByLength).type('paragraphish')),
             // TODO: Maybe include <li>s, blockquotes, and such in here too,
             // and let the linkDensity and clustering cull out the nav
             // elements. Or just do a "blur" algorithm within the cluster,
@@ -236,27 +239,6 @@ describe('Design-driving demos', function () {
          */
         function snippetsFrom(doc) {
             return contentNodes(doc).map(p => p.textContent.trim().substr(0, 20).trim());
-        }
-
-        let lengthOfExpectedTexts = 0;
-        let lengthOfDiffs = 0;
-        /**
-         * Measure the difference between 2 DOM trees for the purpose of human
-         * reading, and sock it away to produce a total score later.
-         *
-         * This will get continually pickier over time as we run up against the
-         * limits of its discriminatory power.
-         */
-        function compare(expected, got) {
-            // Currently, this is just a surrounding-whitespace-insensitive
-            // comparison of the text content.
-            const expectedText = trimLines(textContent(expected));
-            const gotText = trimLines(textContent(got));
-            lengthOfExpectedTexts += expectedText.length;
-            lengthOfDiffs += textualDistance(expectedText, gotText);
-        }
-        function diffScore() {
-            return lengthOfDiffs / lengthOfExpectedTexts * 100;
         }
 
         // ----------------------------- Tests: -------------------------------
@@ -353,21 +335,48 @@ describe('Design-driving demos', function () {
                              ['Smoo bars.', 'Mangaroo. Witches an', 'Bing bang, I saw the']);
         });
 
-        it('validates diff-scoring function', function () {
-            const expected = jsdom(`
-                <div>A</div>
-            `);
-            const got = jsdom(`
-                <div>B</div>
-            `);
-            compare(expected, got);
-        });
+        describe('the Readability test suite', function () {
+            let lengthOfExpectedTexts = 0;
+            let lengthOfDiffs = 0;
+            /**
+             * Run our Readability-alike algorithm over a DOM, and measure the
+             * difference from the expected result, where the difference is
+             * defined in accordance with the needs of human reading. Sock the
+             * results away to produce a total score later.
+             *
+             * This will get continually pickier over time as we run up against
+             * the limits of its discriminatory power.
+             */
+            function compare(expectedDom, sourceDom) {
+                // Currently, this is just a surrounding-whitespace-insensitive
+                // comparison of the text content.
+                const expectedText = trimLines(textContent(expectedDom));
+                const gotText = trimLines(contentNodes(sourceDom).map(node => node.textContent).join('\n'));
+                lengthOfExpectedTexts += expectedText.length;
+                lengthOfDiffs += textualDistance(expectedText, gotText);
 
-        after(function () {
-            const score = diffScore();
-            console.log('\n      In total: ' + score.toFixed(1) + '% different than perfect');  // eslint-disable-line no-console
-            // We keep dropping this as we get better, to prevent regressions:
-            assert.isBelow(score, 999);
+                // Uncomment for debugging:
+                // console.log('Got:\n' + gotText);
+                // console.log('\nExpected:\n' + expectedText);
+            }
+            function diffScore() {
+                return lengthOfDiffs / lengthOfExpectedTexts * 100;
+            }
+
+            function expectedAndSourceDocs(dirName) {
+                const domFromFile = fileName => jsdom(readFileSync(join(__dirname, 'readability', dirName, fileName)));
+                return [domFromFile('expected.html'),
+                        domFromFile('source.html')];
+            }
+
+            it('basic-tags-cleaning', () => compare(...expectedAndSourceDocs('basic-tags-cleaning')));
+
+            after(function () {
+                const score = diffScore();
+                console.log('\n      In total: ' + score.toFixed(1) + '% different than perfect');  // eslint-disable-line no-console
+                // We keep dropping this as we get better, to prevent regressions:
+                assert.isBelow(score, 73);
+            });
         });
     });
 });
