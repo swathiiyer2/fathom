@@ -379,8 +379,36 @@ describe('Design-driving demos', function () {
                 compare(...expectedAndSourceDocs(name));
             }
 
+            function minimizeWithIntegerBruteForce(func) {
+                let min = 1e6;
+                let minInput = [];
+                for (let a = 3; a < 4; a++) {
+                for (let b = 0; b < 4; b++) {
+                for (let c = 0; c < 4; c++) {
+                for (let d = 0; d < 4; d++) {
+                for (let e = 0; e < 4; e++) {
+                for (let f = 0; f < 4; f++) {
+                for (let g = 0; g < 4; g++) {
+                    let result = func([a, b, c, d, e, f, g]);
+                    if (result < min) {
+                        min = result;
+                        minInput = [a, b, c, d, e, f, g];
+                        console.log(min);
+                        console.log(minInput);
+                    }
+                }
+                }
+                }
+                }
+                }
+                }
+                }
+                return {min, minInput};
+            }  // started all thse around 15:36. Should be done in 15 mins.
+            // Best so far is [>0, 0, 1, 1, 1, 1, 0]
+
             function fitness(coeffs) {
-                console.log(coeffs);
+                //console.log(coeffs);
                 lengthOfExpectedTexts = 0;
                 lengthOfDiffs = 0;
                 const contentNodes = contentNodesWithCoefficients(...coeffs);
@@ -389,14 +417,14 @@ describe('Design-driving demos', function () {
                 readabilityTest('001', cmp);
                 //readabilityTest('002');  // hellish number of candidate tags. Takes 14s.
                 readabilityTest('daringfireball-1', cmp);
-                console.log(diffScore());
+                //console.log(diffScore());
                 return diffScore();
             }
 
             it.only('puts the lotion on its skin', function () {
                 console.log('Solution: ');
                 //console.log(fitness([1, 1.5, 1, 2, 2, 1, 1]));
-                console.log(minimize_Powell(fitness, [1,2,3,4,5,6,7]));
+                console.log(minimizeWithIntegerBruteForce(fitness));
             });
 
             after(function () {
