@@ -115,6 +115,8 @@ describe('Design-driving demos', function () {
     });
 
     describe('finds content in a Readability-like fashion from', function () {
+        this.timeout(0);  // This early in the dev process, some things still take awhile.
+
         // Potential advantages over readability:
         // * State clearly contained
         // * Should work fine with ideographic languages and others that lack
@@ -146,7 +148,7 @@ describe('Design-driving demos', function () {
             // Score on text length -> paragraphish. We start with this
             // because, no matter the other markup details, the main body text
             // is definitely going to have a bunch of text.
-            rule(dom('p,div,li,code,blockquote'), props(scoreByLength).type('paragraphish')),
+            rule(dom('p,div,li,code,blockquote,pre'), props(scoreByLength).type('paragraphish')),
             // TODO: Maybe include <li>s, blockquotes, and such in here too,
             // and let the linkDensity and clustering cull out the nav
             // elements. Or just do a "blur" algorithm within the cluster,
@@ -368,7 +370,14 @@ describe('Design-driving demos', function () {
                         domFromFile('source.html')];
             }
 
-            it('basic-tags-cleaning', () => compare(...expectedAndSourceDocs('basic-tags-cleaning')));
+            function readabilityTest(name) {
+                it(name, () => compare(...expectedAndSourceDocs(name)));
+            }
+
+            readabilityTest('basic-tags-cleaning');
+            readabilityTest('001');
+            readabilityTest('002');  // hellish number of candidate tags. Takes 14s.
+            readabilityTest('daringfireball-1');
 
             after(function () {
                 const score = diffScore();
