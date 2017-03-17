@@ -382,26 +382,14 @@ describe('Design-driving demos', function () {
             function minimizeWithIntegerBruteForce(func) {
                 let min = 1e6;
                 let minInput = [];
-                for (let a = 3; a < 4; a++) {
-                for (let b = 0; b < 4; b++) {
-                for (let c = 0; c < 4; c++) {
-                for (let d = 0; d < 4; d++) {
-                for (let e = 0; e < 4; e++) {
-                for (let f = 0; f < 4; f++) {
-                for (let g = 0; g < 4; g++) {
-                    let result = func([a, b, c, d, e, f, g]);
+                for (let a = 100; a < 10000; a+=100) {
+                    let result = func([a, 0, 1, 1, 1, 1, 0]);
                     if (result < min) {
                         min = result;
-                        minInput = [a, b, c, d, e, f, g];
-                        console.log(min);
-                        console.log(minInput);
+                        minInput = [a, 0, 1, 1, 1, 1, 0];
                     }
-                }
-                }
-                }
-                }
-                }
-                }
+                    console.log(result);
+                    console.log([a, 0, 1, 1, 1, 1, 0]);
                 }
                 return {min, minInput};
             }  // started all thse around 15:36. Should be done in 15 mins.

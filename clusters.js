@@ -134,8 +134,9 @@ function distance(elementA,
             cost += l.tagName === r.tagName ? sameTagCost : differentTagCost;
         }
         // Optimization: strides might be a good dimension to eliminate.
-        // TODO: Don't count stride nodes if strideCost is 0.
-        cost += numStrides(l, r) * strideCost;
+        if (strideCost !== 0) {
+            cost += numStrides(l, r) * strideCost;
+        }
     }
 
     return cost;
