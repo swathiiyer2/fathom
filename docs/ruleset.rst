@@ -10,15 +10,12 @@ The top-level Fathom object is the ruleset, an unordered collection of rules. Th
 .. autofunction:: ruleset(rule[, rule, ...])
 
 .. autoclass:: Ruleset(rule[, rule, ...])
-
-   .. autofunction:: Ruleset#against
-   .. autofunction:: Ruleset#rules
+   :members: against, rules
 
 Then you call :func:`Ruleset.against` to get back a :class:`BoundRuleset`, which is specific to a given DOM tree. From that, you pull answers.
 
 .. autoclass:: BoundRuleset()
-
-   .. autofunction:: BoundRuleset#get
+   :members: get
 
 Rules
 =====

@@ -85,6 +85,7 @@ Other
 .. autofunction:: maxes
 .. autofunction:: min
 .. autoclass:: NiceSet
+   :members:
 .. autofunction:: numberOfMatches
 .. autofunction:: page
 .. autofunction:: reversed

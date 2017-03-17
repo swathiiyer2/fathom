@@ -295,6 +295,9 @@ class NiceSet extends Set {
         throw new Error('Tried to pop from an empty NiceSet.');
     }
 
+    /**
+     * Actually show the items in me.
+     */
     toString() {
         return '{' + Array.from(this).join(', ') + '}';
     }
