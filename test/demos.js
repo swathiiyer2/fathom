@@ -130,8 +130,10 @@ describe('Design-driving demos', function () {
         //   over, loosening constraints each time, if it fails
 
         // ---------------------- The actual algorithm: -----------------------
+        function contentNodesWithCoefficients(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coeffLength = 2, coeffDifferentDepth = 6.5, coeffDifferentTag = 2, coeffSameTag = 0.5, coeffStride = 0) {
+            // The default coefficients are the ones that score best against a
+            // subset of Readability test cases.
 
-        function contentNodesWithCoefficients(coeffLinkDensity = 1, coeffParagraphTag = 1.5, coeffLength = 1, coeffDifferentDepth = 2, coeffDifferentTag = 2, coeffSameTag = 1, coeffStride = 1) {
             // Score a node based on how much text is directly inside it and its
             // inline-tag children.
             function scoreByLength(fnode) {
@@ -379,22 +381,6 @@ describe('Design-driving demos', function () {
                 compare(...expectedAndSourceDocs(name));
             }
 
-            function minimizeWithIntegerBruteForce(func) {
-                let min = 1e6;
-                let minInput = [];
-                for (let a = 100; a < 10000; a+=100) {
-                    let result = func([a, 0, 1, 1, 1, 1, 0]);
-                    if (result < min) {
-                        min = result;
-                        minInput = [a, 0, 1, 1, 1, 1, 0];
-                    }
-                    console.log(result);
-                    console.log([a, 0, 1, 1, 1, 1, 0]);
-                }
-                return {min, minInput};
-            }  // started all thse around 15:36. Should be done in 15 mins.
-            // Best so far is [>0, 0, 1, 1, 1, 1, 0]
-
             function fitness(coeffs) {
                 //console.log(coeffs);
                 lengthOfExpectedTexts = 0;
@@ -412,7 +398,86 @@ describe('Design-driving demos', function () {
             it.only('puts the lotion on its skin', function () {
                 console.log('Solution: ');
                 //console.log(fitness([1, 1.5, 1, 2, 2, 1, 1]));
-                console.log(minimizeWithIntegerBruteForce(fitness));
+                //console.log(minimizeWithIntegerBruteForce(fitness));
+
+                /**
+                 * a base for simulated annealing algorithm
+                 * 
+                 * these kinds of problems, measure cost of the state space, random changes
+                 * to the state that reduce the overall cost are incorporated. Occasionally a
+                 * random change that increases cost is incorporated. The chance of incorporating
+                 * the random change that increases cost decreases as the algorithim progresses.
+                 * 
+                 * Annealing is probably a bad name - it's more like freezing, but you
+                 * won't get far searching for freezing algorithms!
+                 *
+                 */
+                class Annealer {
+                    constructor() {
+                        this.INITIAL_TEMPERATURE = 5000;
+                        this.COOLING_STEPS = 5000;
+                        this.COOLING_FRACTION = 0.95;
+                        this.STEPS_PER_TEMP = 1000;
+                        this.BOLTZMANNS = 1.3806485279e-23; 
+                    }
+
+                    anneal() {
+                        console.log( "Annealing..." );
+
+                        var temperature = this.INITIAL_TEMPERATURE;
+                        var current_solution = this.initial_solution();        
+                        var current_cost = this.solution_cost( current_solution );
+                        var m = 0;
+                        var n = 0;
+                        for (var i=0; i<this.COOLING_STEPS; i++) {
+                            var start_cost = current_cost;
+                            for (var j=0; j<this.STEPS_PER_TEMP; j++) {
+                                var new_solution = this.random_transition( current_solution );
+                                var new_cost = this.solution_cost( new_solution );
+
+                                if( new_cost < current_cost ) {
+                                    current_cost = new_cost;
+                                    current_solution = new_solution;
+                                    console.log('New best solution is ', new_solution, ' with fitness ', new_cost);
+                                } else {
+                                    var minus_delta = current_cost - new_cost;
+                                    var merit = Math.exp( minus_delta / (this.BOLTZMANNS*temperature) );
+                                    if (merit > Math.random() ) {
+                                        m++;
+                                        current_cost = new_cost;
+                                        current_solution = new_solution;
+                                    }
+                                }
+                                n++;
+                                // exit if we're not moving
+                                if( start_cost === current_cost ) { break; }
+                            }
+                            temperature *= this.COOLING_FRACTION;
+                        } 
+                        console.log( "Iterations:", n, "using", m, "jumps." );
+                        return current_solution;
+                    }
+                }
+
+                class ContentNodesAnnealer extends Annealer {
+                    constructor() {
+                        super();
+                        this.solution_cost = fitness;
+                    }
+
+                    random_transition(solution) {
+                        // Nudge a random coefficient in a random direction.
+                        const ret = solution.slice();
+                        ret[Math.floor(Math.random() * solution.length)] += Math.floor(Math.random() * 2) ? -.5 : .5;
+                        return ret;
+                    }
+
+                    initial_solution() {
+                        return [1, 1.5, 1, 2, 2, 1, 1];
+                    }
+                }
+
+                console.log(new ContentNodesAnnealer().anneal());
             });
 
             after(function () {
