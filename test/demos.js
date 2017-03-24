@@ -1,14 +1,9 @@
-const {readFileSync} = require('fs');
-const {join} = require('path');
-
 const assert = require('chai').assert;
-const leven = require('leven');
 const {jsdom} = require('jsdom');
 
-const {clusters, distance} = require('../clusters');
-const {dom, out, props, rule, ruleset, score, type} = require('../index');
-const {minimize_Powell} = require('../optimization');
-const {domSort, inlineTextLength, linkDensity, max, numberOfMatches, page, sum} = require('../utils');
+const {deviationScore, tunedContentNodes} = require('../examples/readability');
+const {dom, out, props, rule, ruleset, type} = require('../index');
+const {numberOfMatches, page, sum} = require('../utils');
 
 
 describe('Design-driving demos', function () {
@@ -118,135 +113,14 @@ describe('Design-driving demos', function () {
     describe('finds content in a Readability-like fashion from', function () {
         this.timeout(0);  // This early in the dev process, some things still take awhile.
 
-        // Potential advantages over readability:
-        // * State clearly contained
-        // * Should work fine with ideographic languages and others that lack
-        //   space-delimited words
-        // * Pluggable
-        // * Potential to have rules generated or tuned by training
-        // * Adaptable to find things other than the main body text (like
-        //   clusters of nav links)
-        // * Potential to perform better since it doesn't have to run over and
-        //   over, loosening constraints each time, if it fails
-
-        // ---------------------- The actual algorithm: -----------------------
-        function contentNodesWithCoefficients(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coeffLength = 2, coeffDifferentDepth = 6.5, coeffDifferentTag = 2, coeffSameTag = 0.5, coeffStride = 0) {
-            // The default coefficients are the ones that score best against a
-            // subset of Readability test cases.
-
-            // Score a node based on how much text is directly inside it and its
-            // inline-tag children.
-            function scoreByLength(fnode) {
-                const length = inlineTextLength(fnode.element) * coeffLength;
-                return {
-                    score: length,  // May be scaled someday
-                    note: {inlineLength: length}  // Store expensive inline length for linkDensity().
-                };
-            }
-
-            // This set of rules is the beginning of something that works.
-            // It's modeled after what I do when I try to do this by hand: I look
-            // for balls of black text, and I look for them to be near each other,
-            // generally siblings: a "cluster" of them.
-            const rules = ruleset(
-                // Score on text length -> paragraphish. We start with this
-                // because, no matter the other markup details, the main body text
-                // is definitely going to have a bunch of text.
-                rule(dom('p,div,li,code,blockquote,pre'), props(scoreByLength).type('paragraphish')),
-                // TODO: Maybe include <li>s, blockquotes, and such in here too,
-                // and let the linkDensity and clustering cull out the nav
-                // elements. Or just do a "blur" algorithm within the cluster,
-                // pulling in other elements with decent text density, good CSS
-                // smells, and such. (Interstitials like those probably won't split
-                // clusters if the stride cost is set low enough.) To test, add a
-                // very short paragraph in the midst of the long one, thus testing
-                // our leaning toward contiguousness.
-
-                // Scale it by inverse of link density:
-                rule(type('paragraphish'), score(fnode => (1 - linkDensity(fnode, fnode.noteFor('paragraphish').inlineLength)) * coeffLinkDensity)),
-
-                // Give bonuses for being in p tags.
-                rule(dom('p'), score(coeffParagraphTag).type('paragraphish'))
-                // TODO: article tags, etc., too
-
-                // TODO: Ignore invisible nodes so people can't game us with those.
-            );
-
-            // Return the nodes expressing a document's main textual content.
-            function contentNodes(doc) {
-                const facts = rules.against(doc);
-                const paragraphishes = facts.get(type('paragraphish'));
-                const paragraphishNodes = paragraphishes.map(fnode => fnode.element);
-                const clusts = clusters(
-                    paragraphishNodes,
-                    3,
-                    (a, b) => distance(a, b, {differentDepthCost: coeffDifferentDepth,
-                                              differentTagCost: coeffDifferentTag,
-                                              sameTagCost: coeffSameTag,
-                                              strideCost: coeffStride
-
-                                              // This is an addition to the distance
-                                              // function which makes nodes that have
-                                              // outlier lengths further away. It's meant to
-                                              // help filter out interstitials like ads.
-                                              // +1 to make a zero difference in length be 0
-                                              // /10 to bring (only) large differences in length into scale with the above costs
-                                              // additionalCost: (a, b) => Math.log(Math.abs(a.noteFor('paragraphish').inlineLength -
-                                              //                                             b.noteFor('paragraphish').inlineLength) / 10 + 1)
-                                              // TODO: Consider a logistic function instead of log.
-                    }));
-                // TODO: Probably promote someting like a "bestCluster()" to an in-
-                // ruleset aggregate function so its output can feed into other
-                // rules. It should take cost coefficients without requiring
-                // distance() itself to be wrapped and passed in.
-
-                // Tag each cluster with the total of its paragraphs' scores:
-                const clustsAndSums = clusts.map(clust => [clust,
-                                                           sum(clust.map(para => facts.get(para).scoreFor('paragraphish')))]);
-                // TODO: Make clusters() take fnodes, not nodes, so we can call
-                // scoreFor directly on the fnode above.
-                // TODO: Once that's done, use score as part of the distance metric,
-                // which should tend to push outlier-sized paragraphs out of clusters,
-                // especially if they're separated topographically (like copyright
-                // notices).
-                const bestClust = max(clustsAndSums, clustAndSum => clustAndSum[1])[0];
-                return domSort(bestClust);
-                // Other ideas: We could pick the cluster around the highest-scoring
-                // node (which is more like what Readability does) or the highest-
-                // scoring cluster by some formula (num typed nodes * scores of the
-                // nodes), and contiguous() it so things like ads are excluded but
-                // short paragraphs are included.
-            }
-
-            return contentNodes;
-        }
-
         // ---------------------- Test helper routines: -----------------------
-
-        /** Return the concatenated textual content of an entire DOM tree. */
-        function textContent(dom) {
-            // dom.textContent crashes. dom.firstChild is always an HTML element in
-            // jsdom, even if you didn't include one.
-            return dom.firstChild.textContent;
-        }
-
-        /** Remove leading and trailing whitespace from each line of a string. */
-        function trimLines(str) {
-            const lines = str.split('\n');
-            return lines.map(l => l.trim()).join('\n');
-        }
-
-        /** Return the edit distance between 2 strings. */
-        function textualDistance(s, t) {
-            return leven(s, t);
-        }
 
         /**
          * Return a 20-char snippet of each node from a document's main
          * textual content.
          */
         function snippetsFrom(doc) {
-            return contentNodes(doc).map(p => p.textContent.trim().substr(0, 20).trim());
+            return tunedContentNodes()(doc).map(p => p.textContent.trim().substr(0, 20).trim());
         }
 
         // ----------------------------- Tests: -------------------------------
@@ -343,152 +217,11 @@ describe('Design-driving demos', function () {
                              ['Smoo bars.', 'Mangaroo. Witches an', 'Bing bang, I saw the']);
         });
 
-        describe('the Readability test suite', function () {
-            let lengthOfExpectedTexts = 0;
-            let lengthOfDiffs = 0;
-            /**
-             * Run our Readability-alike algorithm over a DOM, and measure the
-             * difference from the expected result, where the difference is
-             * defined in accordance with the needs of human reading. Sock the
-             * results away to produce a total score later.
-             *
-             * This will get continually pickier over time as we run up against
-             * the limits of its discriminatory power.
-             */
-            function compare(expectedDom, sourceDom, contentNodes) {
-                // Currently, this is just a surrounding-whitespace-insensitive
-                // comparison of the text content.
-                const expectedText = trimLines(textContent(expectedDom));
-                const gotText = trimLines(contentNodes(sourceDom).map(node => node.textContent).join('\n'));
-                lengthOfExpectedTexts += expectedText.length;
-                lengthOfDiffs += textualDistance(expectedText, gotText);
-
-                // Uncomment for debugging:
-                // console.log('Got:\n' + gotText);
-                // console.log('\nExpected:\n' + expectedText);
-            }
-            function diffScore() {
-                return lengthOfDiffs / lengthOfExpectedTexts * 100;
-            }
-
-            function expectedAndSourceDocs(dirName) {
-                const domFromFile = fileName => jsdom(readFileSync(join(__dirname, 'readability', dirName, fileName)));
-                return [domFromFile('expected.html'),
-                        domFromFile('source.html')];
-            }
-
-            function readabilityTest(name, compare) {
-                compare(...expectedAndSourceDocs(name));
-            }
-
-            function fitness(coeffs) {
-                //console.log(coeffs);
-                lengthOfExpectedTexts = 0;
-                lengthOfDiffs = 0;
-                const contentNodes = contentNodesWithCoefficients(...coeffs);
-                const cmp = (expectedDom, sourceDom) => compare(expectedDom, sourceDom, contentNodes);
-                readabilityTest('basic-tags-cleaning', cmp);
-                readabilityTest('001', cmp);
-                //readabilityTest('002');  // hellish number of candidate tags. Takes 14s.
-                readabilityTest('daringfireball-1', cmp);
-                //console.log(diffScore());
-                return diffScore();
-            }
-
-            it.only('puts the lotion on its skin', function () {
-                console.log('Solution: ');
-                //console.log(fitness([1, 1.5, 1, 2, 2, 1, 1]));
-                //console.log(minimizeWithIntegerBruteForce(fitness));
-
-                /**
-                 * a base for simulated annealing algorithm
-                 * 
-                 * these kinds of problems, measure cost of the state space, random changes
-                 * to the state that reduce the overall cost are incorporated. Occasionally a
-                 * random change that increases cost is incorporated. The chance of incorporating
-                 * the random change that increases cost decreases as the algorithim progresses.
-                 * 
-                 * Annealing is probably a bad name - it's more like freezing, but you
-                 * won't get far searching for freezing algorithms!
-                 *
-                 */
-                class Annealer {
-                    constructor() {
-                        this.INITIAL_TEMPERATURE = 5000;
-                        this.COOLING_STEPS = 5000;
-                        this.COOLING_FRACTION = 0.95;
-                        this.STEPS_PER_TEMP = 1000;
-                        this.BOLTZMANNS = 1.3806485279e-23; 
-                    }
-
-                    anneal() {
-                        console.log( "Annealing..." );
-
-                        var temperature = this.INITIAL_TEMPERATURE;
-                        var current_solution = this.initial_solution();        
-                        var current_cost = this.solution_cost( current_solution );
-                        var m = 0;
-                        var n = 0;
-                        for (var i=0; i<this.COOLING_STEPS; i++) {
-                            var start_cost = current_cost;
-                            for (var j=0; j<this.STEPS_PER_TEMP; j++) {
-                                var new_solution = this.random_transition( current_solution );
-                                var new_cost = this.solution_cost( new_solution );
-
-                                if( new_cost < current_cost ) {
-                                    current_cost = new_cost;
-                                    current_solution = new_solution;
-                                    console.log('New best solution is ', new_solution, ' with fitness ', new_cost);
-                                } else {
-                                    var minus_delta = current_cost - new_cost;
-                                    var merit = Math.exp( minus_delta / (this.BOLTZMANNS*temperature) );
-                                    if (merit > Math.random() ) {
-                                        m++;
-                                        current_cost = new_cost;
-                                        current_solution = new_solution;
-                                    }
-                                }
-                                n++;
-                                // exit if we're not moving
-                                if( start_cost === current_cost ) { break; }
-                            }
-                            temperature *= this.COOLING_FRACTION;
-                        } 
-                        console.log( "Iterations:", n, "using", m, "jumps." );
-                        return current_solution;
-                    }
-                }
-
-                class ContentNodesAnnealer extends Annealer {
-                    constructor() {
-                        super();
-                        this.solution_cost = fitness;
-                    }
-
-                    random_transition(solution) {
-                        // Nudge a random coefficient in a random direction.
-                        const ret = solution.slice();
-                        ret[Math.floor(Math.random() * solution.length)] += Math.floor(Math.random() * 2) ? -.5 : .5;
-                        return ret;
-                    }
-
-                    initial_solution() {
-                        return [1, 1.5, 1, 2, 2, 1, 1];
-                    }
-                }
-
-                console.log(new ContentNodesAnnealer().anneal());
-            });
-
-            after(function () {
-                const score = diffScore();
-                console.log('\n      In total: ' + score.toFixed(1) + '% different than perfect');  // eslint-disable-line no-console
-                // We keep dropping this as we get better, to prevent regressions:
-                assert.isBelow(score, 73);
-            });
+        it('the Readability test suite', function () {
+            // We keep dropping this as we get better, to prevent regressions:
+            assert.isBelow(deviationScore(), 8);
         });
     });
 });
 
-// Right now, I'm writing features. We can use a supervised learning algorithm to find their coefficients. Someday, we can stop writing features and have deep learning algorithm come up with them. TODO: Grok unsupervised learning, and apply it to OpenCrawl.
-// If we ever end up doing actual processing server-side, consider cheeriojs instead of jsdom. It may be 8x faster, though with a different API.
+// Right now, I'm writing features and using optimization algos to find their coefficients. Someday, we can stop writing features and have deep learning come up with them. TODO: Grok unsupervised learning, and apply it to OpenCrawl.
