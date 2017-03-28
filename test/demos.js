@@ -1,9 +1,8 @@
 const assert = require('chai').assert;
-const {jsdom} = require('jsdom');
 
 const {deviationScore, readabilityDocPairs, tunedContentNodes} = require('../examples/readability');
 const {dom, out, props, rule, ruleset, type} = require('../index');
-const {numberOfMatches, page, sum} = require('../utils');
+const {numberOfMatches, page, staticDom, sum} = require('../utils');
 
 
 describe('Design-driving demos', function () {
@@ -12,7 +11,7 @@ describe('Design-driving demos', function () {
         // test is to inspire engine so it's smart enough to run the highest-
         // possible-scoring type-chain of rules first and, if it succeeds,
         // omit the others.
-        const doc = jsdom(`
+        const doc = staticDom(`
             <meta name="hdl" content="HDL">
             <meta property="og:title" content="OpenGraph">
             <meta property="twitter:title" content="Twitter">
@@ -81,13 +80,13 @@ describe('Design-driving demos', function () {
         }
 
         // air.mozilla.org:
-        assert(isProbablyLoggedIn(jsdom(`
+        assert(isProbablyLoggedIn(staticDom(`
             <html>
                 <a href="/authentication/signout/" class="signout">Sign Out</a>
             </html>
         `)));
         // crateandbarrel.com
-        assert(isProbablyLoggedIn(jsdom(`
+        assert(isProbablyLoggedIn(staticDom(`
             <html>
                 <div class="dropdown-sign-in">
                     <a href="/account/logout" rel="nofollow">Sign Out</a>
@@ -95,7 +94,7 @@ describe('Design-driving demos', function () {
             </html>
         `)));
         // slashdot.org
-        assert(isProbablyLoggedIn(jsdom(`
+        assert(isProbablyLoggedIn(staticDom(`
             <html>
                 <a href="///slashdot.org/my/logout">
                   Log out
@@ -103,7 +102,7 @@ describe('Design-driving demos', function () {
             </html>
         `)));
         // news.ycombinator.com
-        assert(isProbablyLoggedIn(jsdom(`
+        assert(isProbablyLoggedIn(staticDom(`
             <html>
                 <a href="logout?auth=123456789abcdef&amp;goto=news">logout</a>
             </html>
@@ -126,7 +125,7 @@ describe('Design-driving demos', function () {
         // ----------------------------- Tests: -------------------------------
 
         it('closely clustered runs of text', function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <div>
                     <h1>
                         Welcome to here.
@@ -170,7 +169,7 @@ describe('Design-driving demos', function () {
             // outer so we end up with either-or: generally just the outer,
             // which are often more plentiful. We then get the inner by means
             // of having their containers.
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <div>
                     Smoo bars.
                     <p>
@@ -192,7 +191,7 @@ describe('Design-driving demos', function () {
         it('large outer clusters with some piddly inner things contained', function () {
             // For instance, if the inner things were <code> blocks and the
             // outer were <p>s, we'd want the <p>s.
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <div>
                     Smoo bars.
                     <p>

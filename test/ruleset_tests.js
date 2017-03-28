@@ -1,13 +1,13 @@
 const {assert} = require('chai');
-const {jsdom} = require('jsdom');
 
 const {and, conserveScore, dom, out, props, rule, ruleset, score, type, typeIn} = require('../index');
+const {staticDom} = require('../utils');
 
 
 describe('Ruleset', function () {
     describe('get()s', function () {
         it('by arbitrary passed-in LHSs (and scores dom() nodes at 1)', function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <div>Hooooooo</div>
             `);
             const rules = ruleset(
@@ -19,7 +19,7 @@ describe('Ruleset', function () {
         });
 
         it('by passed-in type(A) LHS, triggering A -> A rules along the way', function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <div>Hooooooo</div>
             `);
             const rules = ruleset(
@@ -44,7 +44,7 @@ describe('Ruleset', function () {
         });
 
         it('results by out-rule key', function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <div>Hooooooo</div>
             `);
             const rules = ruleset(
@@ -55,7 +55,7 @@ describe('Ruleset', function () {
         });
 
         it('the fnode corresponding to a passed-in node', function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <div>Hooooooo</div>
             `);
             const rules = ruleset(
@@ -74,7 +74,7 @@ describe('Ruleset', function () {
             const rules = ruleset(
                 rule(dom('a'), props(n => ({type: 'a'})).typeIn('a', 'b'))
             );
-            const facts = rules.against(jsdom('<a></a>'));
+            const facts = rules.against(staticDom('<a></a>'));
             // Tempt it to multiply once:
             assert.deepEqual(facts.get(type('b')), []);
         });
@@ -83,7 +83,7 @@ describe('Ruleset', function () {
     it('assigns scores and notes to nodes', function () {
         // Test the score() and note() calls themselves as well as the ruleset
         // that obeys them.
-        const doc = jsdom(`
+        const doc = staticDom(`
             <p>
                 <a class="good" href="https://github.com/jsdom">Good!</a>
                 <a class="bad" href="https://github.com/jsdom">Bad!</a>
@@ -102,7 +102,7 @@ describe('Ruleset', function () {
 
     describe('avoids cycles', function () {
         it('that should be statically detectable, throwing an error', function () {
-            const doc = jsdom('<p></p>');
+            const doc = staticDom('<p></p>');
             const rules = ruleset(
                 rule(dom('p'), type('a')),
                 rule(type('a'), type('b')),
@@ -117,7 +117,7 @@ describe('Ruleset', function () {
     describe('conserves score', function () {
         it('only when conserveScore() is used, using per-type scores otherwise', function () {
             // Also test that rules fire lazily.
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <p></p>
             `);
             const rules = ruleset(
@@ -144,7 +144,7 @@ describe('Ruleset', function () {
         });
 
         it('when rules emitting the same element and type conflict on conservation', function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <p></p>
             `);
             const rules = ruleset(
@@ -158,7 +158,7 @@ describe('Ruleset', function () {
         });
 
         it('but never factors in a score more than once', function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <p></p>
             `);
             const rules = ruleset(
@@ -182,13 +182,13 @@ describe('Ruleset', function () {
         it('by remembering what types rules add and emit', function () {
             const rule1 = rule(dom('p'), props('dummy').typeIn('q', 'r'));
             const rule2 = rule(type('r'), type('s'));
-            const facts = ruleset(rule1, rule2).against(jsdom(''));
+            const facts = ruleset(rule1, rule2).against(staticDom(''));
             assert.deepEqual(facts.inwardRulesThatCouldEmit('q'), [rule1]);
             assert.deepEqual(facts.inwardRulesThatCouldAdd('s'), [rule2]);
         });
 
         it('and avoids unneeded rules', function () {
-            const doc = jsdom('<p></p>');
+            const doc = staticDom('<p></p>');
             const rules = ruleset(
                 rule(dom('p'), type('a')),
                 rule(dom('p'), type('b')),
@@ -207,7 +207,7 @@ describe('Ruleset', function () {
     });
 
     it('plans for and runs a working and()', function () {
-        const doc = jsdom('<a class="smoo"></a><p></p>');
+        const doc = staticDom('<a class="smoo"></a><p></p>');
         const rules = ruleset(
             rule(dom('a'), type('A')),
             rule(dom('a[class]'), type('C')),
@@ -234,7 +234,7 @@ describe('Ruleset', function () {
     });
 
     it('takes a subtree of a document and operates on it', function () {
-        const doc = jsdom(`
+        const doc = staticDom(`
             <div id=root>some text
              <div id=inner>some more text</div>
             </div>
@@ -277,7 +277,7 @@ describe('Rule', function () {
         const maintainRule = rule(type('b'), score(2));
         const addRule = rule(type('b'), type('c'));
         const rules = ruleset(domRule, maxRule, maintainRule, addRule);
-        const facts = rules.against(jsdom(''));
+        const facts = rules.against(staticDom(''));
         assert.deepEqual(domRule.prerequisites(facts), []);
         assert.deepEqual(maxRule.prerequisites(facts), [domRule]);
         assert.deepEqual(maintainRule.prerequisites(facts), [maxRule]);

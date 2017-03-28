@@ -17,12 +17,11 @@
 const {readFileSync} = require('fs');
 const {dirname, join} = require('path');
 
-const {jsdom} = require('jsdom');
 const leven = require('leven');
 
 const {clusters, distance} = require('../clusters');
 const {dom, props, rule, ruleset, score, type} = require('../index');
-const {domSort, inlineTextLength, linkDensity, max, sum} = require('../utils');
+const {domSort, inlineTextLength, linkDensity, max, staticDom,  sum} = require('../utils');
 
 
 /**
@@ -179,7 +178,7 @@ class DiffStats {
 }
 
 function expectedAndSourceDocs(folder) {
-    const domFromFile = fileName => jsdom(readFileSync(join(dirname(__dirname), 'test', 'readability', folder, fileName)));
+    const domFromFile = fileName => staticDom(readFileSync(join(dirname(__dirname), 'test', 'readability', folder, fileName)));
     return [domFromFile('expected.html'),
             domFromFile('source.html')];
 }
