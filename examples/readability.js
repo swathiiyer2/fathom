@@ -170,12 +170,7 @@ class DiffStats {
      * readability test folder.
      */
     compareFilesIn(folder) {
-        function expectedAndSourceDocs() {
-            const domFromFile = fileName => jsdom(readFileSync(join(dirname(__dirname), 'test', 'readability', folder, fileName)));
-            return [domFromFile('expected.html'),
-                    domFromFile('source.html')];
-        }
-        this.compare(...expectedAndSourceDocs());
+        this.compare(...expectedAndSourceDocs(folder));
     }
 
     score() {
@@ -183,24 +178,36 @@ class DiffStats {
     }
 }
 
-function deviationScore(coeffs=[]) {
+function expectedAndSourceDocs(folder) {
+    const domFromFile = fileName => jsdom(readFileSync(join(dirname(__dirname), 'test', 'readability', folder, fileName)));
+    return [domFromFile('expected.html'),
+            domFromFile('source.html')];
+}
+
+function deviationScore(docPairs, coeffs=[]) {
     const stats = new DiffStats(tunedContentNodes(...coeffs));
-    stats.compareFilesIn('basic-tags-cleaning');
-    stats.compareFilesIn('001');
-    //stats.compareFilesIn('002');  // hellish number of candidate tags. Takes 14s.
-    stats.compareFilesIn('daringfireball-1');
+    for (let pair of docPairs) {
+        stats.compare(...pair);
+    }
     return stats.score();
+}
+
+function readabilityDocPairs() {
+    return ['basic-tags-cleaning',
+            '001',
+            //'002', // hellish number of candidate tags. Takes 14s.
+            'daringfireball-1'].map(expectedAndSourceDocs);
 }
 
 if (require.main === module) {
     // Tune coefficients using simulated annealing.
-
     const {Annealer} = require('../optimizers');
 
     class ContentNodesTuner extends Annealer {
         constructor() {
             super();
-            this.solutionCost = deviationScore;
+            const docPairs = readabilityDocPairs();
+            this.solutionCost = coeffs => deviationScore(docPairs, coeffs);
         }
 
         randomTransition(solution) {
@@ -211,7 +218,7 @@ if (require.main === module) {
         }
 
         initialSolution() {
-            return [1, 1.5, 1, 2, 2, 1, 1];
+            return [1.5, 4.5, 2, 6.5, 2, 0.5, 0];
         }
     }
 
@@ -221,6 +228,7 @@ if (require.main === module) {
 
 module.exports = {
     deviationScore,
+    readabilityDocPairs,
     textContent,
     tunedContentNodes
 };

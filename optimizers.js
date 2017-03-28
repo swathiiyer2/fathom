@@ -30,6 +30,7 @@ class Annealer {
         let m = 0;
         let n = 0;
         for (let i = 0; i < this.COOLING_STEPS; i++) {
+            console.log('Cooling step', i, 'of', this.COOLING_STEPS, '...');
             const startCost = currentCost;
             for (let j = 0; j < this.STEPS_PER_TEMP; j++) {
                 let newSolution = this.randomTransition(currentSolution);

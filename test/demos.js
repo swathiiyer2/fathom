@@ -1,7 +1,7 @@
 const assert = require('chai').assert;
 const {jsdom} = require('jsdom');
 
-const {deviationScore, tunedContentNodes} = require('../examples/readability');
+const {deviationScore, readabilityDocPairs, tunedContentNodes} = require('../examples/readability');
 const {dom, out, props, rule, ruleset, type} = require('../index');
 const {numberOfMatches, page, sum} = require('../utils');
 
@@ -219,7 +219,7 @@ describe('Design-driving demos', function () {
 
         it('the Readability test suite', function () {
             // We keep dropping this as we get better, to prevent regressions:
-            assert.isBelow(deviationScore(), 8);
+            assert.isBelow(deviationScore(readabilityDocPairs()), 8);
         });
     });
 });
