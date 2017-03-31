@@ -196,7 +196,8 @@ function readabilityDocPairs() {
     return ['basic-tags-cleaning',
             '001',
             //'002', // hellish number of candidate tags. Takes 14s.
-            'daringfireball-1'].map(expectedAndSourceDocs);
+            'daringfireball-1',
+            'fathom-closely-clustered'].map(expectedAndSourceDocs);
 }
 
 if (require.main === module) {

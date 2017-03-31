@@ -218,7 +218,7 @@ describe('Design-driving demos', function () {
 
         it('the Readability test suite', function () {
             // We keep dropping this as we get better, to prevent regressions:
-            assert.isBelow(deviationScore(readabilityDocPairs()), 8);
+            assert.isBelow(deviationScore(readabilityDocPairs()), 7.5);
         });
     });
 });
