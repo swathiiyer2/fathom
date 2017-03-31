@@ -1,7 +1,6 @@
 // Tests for fathom/clusters.js
 
 const assert = require('chai').assert;
-const jsdom = require('jsdom').jsdom;
 
 const {distance, clusters} = require('../clusters');
 const {staticDom} = require('../utils');
