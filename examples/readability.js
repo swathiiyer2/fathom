@@ -183,7 +183,7 @@ function expectedAndSourceDocs(folder) {
             domFromFile('source.html')];
 }
 
-function deviationScore(docPairs, coeffs=[]) {
+function deviationScore(docPairs, coeffs = []) {
     const stats = new DiffStats(tunedContentNodes(...coeffs));
     for (let pair of docPairs) {
         stats.compare(...pair);
@@ -191,6 +191,7 @@ function deviationScore(docPairs, coeffs=[]) {
     return stats.score();
 }
 
+/** Return (expected DOM, source DOM) for all the readbaility test docs. */
 function readabilityDocPairs() {
     return ['basic-tags-cleaning',
             '001',
@@ -221,8 +222,11 @@ if (require.main === module) {
         }
     }
 
-    console.log('Tuned coefficients:');
-    console.log(new ContentNodesTuner().anneal());
+    const annealer = new ContentNodesTuner();
+    const coeffs = annealer.anneal();
+    console.log('Tuned coefficients:', coeffs);
+    console.log('% difference from ideal:',
+                deviationScore(readabilityDocPairs(), coeffs));
 }
 
 module.exports = {
