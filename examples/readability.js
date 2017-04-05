@@ -135,6 +135,11 @@ function trimLines(str) {
     return lines.map(l => l.trim()).join('\n');
 }
 
+/** Replace runs of line breaks with single ones. */
+function collapseNewlines(str) {
+    return str.replace(/\n\n+/g, '\n');
+}
+
 class DiffStats {
     constructor(contentNodes) {
         this.lengthOfExpectedTexts = 0;
@@ -154,8 +159,8 @@ class DiffStats {
     compare(expectedDom, sourceDom) {
         // Currently, this is just a surrounding-whitespace-
         // insensitive comparison of the text content.
-        const expectedText = trimLines(textContent(expectedDom));
-        const gotText = trimLines(this.contentNodes(sourceDom).map(node => node.textContent).join('\n'));
+        const expectedText = collapseNewlines(trimLines(textContent(expectedDom)));
+        const gotText = collapseNewlines(trimLines(this.contentNodes(sourceDom).map(node => node.textContent).join('\n')));
         this.lengthOfExpectedTexts += expectedText.length;
         this.lengthOfDiffs += leven(expectedText, gotText);
 
@@ -203,6 +208,9 @@ function readabilityDocPairs() {
 if (require.main === module) {
     // Tune coefficients using simulated annealing.
     const {Annealer} = require('../optimizers');
+    const {argv} = require('process');
+
+    let coeffs = [1.5, 4.5, 2, 6.5, 2, 0.5, 0];
 
     class ContentNodesTuner extends Annealer {
         constructor() {
@@ -219,12 +227,14 @@ if (require.main === module) {
         }
 
         initialSolution() {
-            return [1.5, 4.5, 2, 6.5, 2, 0.5, 0];
+            return coeffs;
         }
     }
 
-    const annealer = new ContentNodesTuner();
-    const coeffs = annealer.anneal();
+    if (argv[2] == '--tune') {
+        const annealer = new ContentNodesTuner();
+        coeffs = annealer.anneal();
+    }
     console.log('Tuned coefficients:', coeffs);
     console.log('% difference from ideal:',
                 deviationScore(readabilityDocPairs(), coeffs));
