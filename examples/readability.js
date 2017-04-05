@@ -13,6 +13,7 @@
  *   clusters of nav links)
  * * Potential to perform better since it doesn't have to run over and
  *   over, loosening constraints each time, if it fails
+ * * Happily finds body text in things other than divs and p tags.
  */
 const {readFileSync} = require('fs');
 const {dirname, join} = require('path');
@@ -53,7 +54,7 @@ function tunedContentNodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coef
         // Score on text length -> paragraphish. We start with this
         // because, no matter the other markup details, the main body text
         // is definitely going to have a bunch of text.
-        rule(dom('p,div,li,code,blockquote,pre'), props(scoreByLength).type('paragraphish')),
+        rule(dom('p,div,li,code,blockquote,pre,h1,h2,h3,h4,h5,h6'), props(scoreByLength).type('paragraphish')),
         // TODO: Maybe include <li>s, blockquotes, and such in here too,
         // and let the linkDensity and clustering cull out the nav
         // elements. Or just do a "blur" algorithm within the cluster,
