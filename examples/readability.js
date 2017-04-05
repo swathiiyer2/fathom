@@ -202,6 +202,12 @@ function readabilityDocPairs() {
             '001',
             //'002', // hellish number of candidate tags. Takes 14s.
             'daringfireball-1',
+            'buzzfeed-1',
+            'clean-links',
+            'ehow-1',
+            'embedded-videos',
+            'heise',
+            'herald-sun-1',
             'fathom-closely-clustered'].map(expectedAndSourceDocs);
 }
 
