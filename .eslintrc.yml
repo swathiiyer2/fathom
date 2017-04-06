@@ -17,7 +17,7 @@ rules:
   indent: [error, 4, {ObjectExpression: first, ArrayExpression: first, CallExpression: {arguments: first}}]
   max-len: [off, {code: 100, ignoreComments: true, ignoreStrings: true, ignoreTemplateLiterals: true}]
   node/exports-style: [error, module.exports]
-  node/no-unpublished-require: [error, {allowModules: [chai, jsdom, leven]}]
+  node/no-unpublished-require: off
   no-console: off
   no-dupe-class-members: error
   no-loop-func: error
