@@ -191,13 +191,17 @@ class DistanceMatrix {
         }
 
         // Return the distances between every pair of clusters.
-        function *clustersAndDistances() {
+        function clustersAndDistances() {
+            const ret = [];
             for (let [outerKey, row] of self._matrix.entries()) {
                 for (let [innerKey, storedDistance] of row.entries()) {
-                    yield {a: outerKey, b: innerKey, distance: storedDistance};
+                    ret.push({a: outerKey, b: innerKey, distance: storedDistance});
                 }
             }
+            return ret;
         }
+        // Optimizing this by inlining the loop and writing it less
+        // functionally doesn't help:
         return min(clustersAndDistances(), x => x.distance);
     }
 
