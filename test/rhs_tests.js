@@ -1,7 +1,7 @@
 const {assert} = require('chai');
-const {jsdom} = require('jsdom');
 
 const {atMost, dom, note, out, props, rule, ruleset, score, type, typeIn} = require('../index');
+const {staticDom} = require('../utils');
 
 
 describe('RHS', function () {
@@ -32,7 +32,7 @@ describe('RHS', function () {
     });
 
     it('enforces atMost()', function () {
-        const doc = jsdom('<p></p>');
+        const doc = staticDom('<p></p>');
         const rules = ruleset(
             rule(dom('p'), score(8).type('para').atMost(3))
         );
@@ -42,7 +42,7 @@ describe('RHS', function () {
     });
 
     it('works fine when atMost() is satisfied', function () {
-        const doc = jsdom('<p></p>');
+        const doc = staticDom('<p></p>');
         const rules = ruleset(
             rule(dom('p'), atMost(3).score(2).type('para'))
         );
@@ -51,7 +51,7 @@ describe('RHS', function () {
     });
 
     it('enforces typeIn() for explicit types', function () {
-        const doc = jsdom('<p></p>');
+        const doc = staticDom('<p></p>');
         const rules = ruleset(
             rule(dom('p'), typeIn('nope').type('para'))
         );
@@ -61,7 +61,7 @@ describe('RHS', function () {
     });
 
     it('enforces typeIn() for inherited types', function () {
-        const doc = jsdom('<p></p>');
+        const doc = staticDom('<p></p>');
         const rules = ruleset(
             rule(dom('p'), type('para')),
             rule(type('para'), props(n => ({})).typeIn('nope'))
@@ -72,7 +72,7 @@ describe('RHS', function () {
     });
 
     it('works fine when typeIn() is satisfied', function () {
-        const doc = jsdom('<p></p>');
+        const doc = staticDom('<p></p>');
         const rules = ruleset(
             rule(dom('p'), typeIn('para').type('para'))
         );
@@ -81,7 +81,7 @@ describe('RHS', function () {
     });
 
     it('runs out().through() callbacks', function () {
-        const doc = jsdom('<p></p>');
+        const doc = staticDom('<p></p>');
         const rules = ruleset(
             rule(dom('p'), out('para').through(fnode => fnode.element.tagName))
         );
@@ -93,7 +93,7 @@ describe('RHS', function () {
         // We shouldn't re-run any rules. Run order shouldn't matter, because
         // we forbid notes from overwriting, score multiplication is
         // commutative, and type assignment is idempotent and immutable.
-        const doc = jsdom('<p></p>');
+        const doc = staticDom('<p></p>');
         const rules = ruleset(
             rule(dom('p'), type('para')),
             rule(type('para'), note(fnode => undefined)),
@@ -104,7 +104,7 @@ describe('RHS', function () {
     });
 
     it('runs scoring callbacks', function () {
-        const doc = jsdom('<p></p>');
+        const doc = staticDom('<p></p>');
         const rules = ruleset(
             rule(dom('p'), type('p').score(fnode => 5))
         );

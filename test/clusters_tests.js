@@ -1,9 +1,9 @@
 // Tests for fathom/clusters.js
 
 const assert = require('chai').assert;
-const jsdom = require('jsdom').jsdom;
 
 const {distance, clusters} = require('../clusters');
+const {staticDom} = require('../utils');
 
 
 // Assert that the distance between nodes a and b is greater in the `deep` DOM
@@ -22,7 +22,7 @@ describe('Cluster tests', function () {
         // fitness function to search for optimal values of cost coefficients.
 
         it('considers a node 0 distance from itself', function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <body>
                     <div id="a">
                     </div>
@@ -34,7 +34,7 @@ describe('Cluster tests', function () {
         });
 
         it('considers deeper nodes farther than shallower', function () {
-            const shallow = jsdom(`
+            const shallow = staticDom(`
                 <body>
                     <div>
                         <div id="a">
@@ -46,7 +46,7 @@ describe('Cluster tests', function () {
                     </div>
                 </body>
             `);
-            const deep = jsdom(`
+            const deep = staticDom(`
                 <body>
                     <div>
                         <div>
@@ -66,7 +66,7 @@ describe('Cluster tests', function () {
         });
 
         it("doesn't crash over different-lengthed subtrees", function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <body>
                     <div>
                         <div>
@@ -85,7 +85,7 @@ describe('Cluster tests', function () {
         });
 
         it('rates descents through similar tags as shorter', function () {
-            const dissimilar = jsdom(`
+            const dissimilar = staticDom(`
                 <body>
                     <center>
                         <div id="a">
@@ -97,7 +97,7 @@ describe('Cluster tests', function () {
                     </div>
                 </body>
             `);
-            const similar = jsdom(`
+            const similar = staticDom(`
                 <body>
                     <div>
                         <div id="a">
@@ -113,7 +113,7 @@ describe('Cluster tests', function () {
         });
 
         it('punishes the existence of stride nodes', function () {
-            const noStride = jsdom(`
+            const noStride = staticDom(`
                 <body>
                     <div>
                         <div id="a">
@@ -125,7 +125,7 @@ describe('Cluster tests', function () {
                     </div>
                 </body>
             `);
-            const edgeSiblings = jsdom(`
+            const edgeSiblings = staticDom(`
                 <body>
                     <div>
                         <div id="a">
@@ -139,7 +139,7 @@ describe('Cluster tests', function () {
                     </div>
                 </body>
             `);
-            const stride = jsdom(`
+            const stride = staticDom(`
                 <body>
                     <div>
                         <div id="a">
@@ -154,7 +154,7 @@ describe('Cluster tests', function () {
                 </body>
             `);
 
-            const noSiblings = jsdom(`
+            const noSiblings = staticDom(`
                 <body>
                     <div>
                         <div id="a">
@@ -166,7 +166,7 @@ describe('Cluster tests', function () {
                     </div>
                 </body>
             `);
-            const interposedSiblings = jsdom(`
+            const interposedSiblings = staticDom(`
                 <body>
                     <div>
                         <div id="a">
@@ -188,7 +188,7 @@ describe('Cluster tests', function () {
             // This tends to ostracize the inner element, which is good,
             // because it's not interesting, because we'll get it through
             // including the outer element in the cluster.
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <body>
                     <div id="b">
                         <div id="a">
@@ -207,7 +207,7 @@ describe('Cluster tests', function () {
 
     describe('clusters()', function () {
         it('groups nearby similar nodes together', function () {
-            const doc = jsdom(`
+            const doc = staticDom(`
                 <body>
                     <div>
                         <a id="A">A</a>

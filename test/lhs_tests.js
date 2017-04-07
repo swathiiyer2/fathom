@@ -1,7 +1,7 @@
 const {assert} = require('chai');
-const {jsdom} = require('jsdom');
 
 const {dom, rule, ruleset, out, type} = require('../index');
+const {staticDom} = require('../utils');
 
 
 describe('LHS', function () {
@@ -12,7 +12,7 @@ describe('LHS', function () {
     });
 
     it('finds max-scoring nodes of a type', function () {
-        const doc = jsdom(`
+        const doc = staticDom(`
             <p></p>
             <div></div>
             <div></div>
@@ -30,7 +30,7 @@ describe('LHS', function () {
     });
 
     it('can have its type overridden', function () {
-        const doc = jsdom('<p></p>');
+        const doc = staticDom('<p></p>');
         const rules = ruleset(
             rule(dom('p'), type('bar')),
             rule(type('foo').type('bar'), out('best'))

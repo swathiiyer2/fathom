@@ -1,3 +1,4 @@
+const {jsdom} = require('jsdom');
 const {forEach, map} = require('wu');
 
 const {CycleError} = require('./exceptions');
@@ -372,6 +373,14 @@ function domSort(elements) {
     return elements;
 }
 
+/**
+ * Parse an HTML doc, and return a DOM-compliant interface to it. Do not
+ * execute any of its inline scripts.
+ */
+function staticDom(html) {
+    return jsdom(html, {features: {ProcessExternalResources: false}});
+}
+
 module.exports = {
     best,
     collapseWhitespace,
@@ -394,6 +403,7 @@ module.exports = {
     reversed,
     rootElement,
     setDefault,
+    staticDom,
     sum,
     toposort,
     walk
