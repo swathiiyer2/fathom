@@ -141,6 +141,10 @@ function collapseNewlines(str) {
     return str.replace(/\n\n+/g, '\n');
 }
 
+/**
+ * Maintain state as we compare a series of DOMs, reporting the percent
+ * difference at the end.
+ */
 class DiffStats {
     constructor(contentNodes) {
         this.lengthOfExpectedTexts = 0;
@@ -212,7 +216,8 @@ function readabilityDocPairs() {
 }
 
 if (require.main === module) {
-    // Tune coefficients using simulated annealing.
+    // By default, just run the Readability examples and show how our current
+    // coefficients score on them.
     const {Annealer} = require('../optimizers');
     const {argv} = require('process');
 
@@ -238,6 +243,7 @@ if (require.main === module) {
     }
 
     if (argv[2] == '--tune') {
+        // Tune coefficients using simulated annealing.
         const annealer = new ContentNodesTuner();
         coeffs = annealer.anneal();
     }
