@@ -208,8 +208,7 @@ function readabilityDocPairs() {
             'ehow-1',
             'embedded-videos',
             'heise',
-            'herald-sun-1',
-            'fathom-closely-clustered'].map(expectedAndSourceDocs);
+            'herald-sun-1'].map(expectedAndSourceDocs);
 }
 
 if (require.main === module) {
