@@ -1,0 +1,1 @@
+../examples/readability/tests.js

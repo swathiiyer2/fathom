@@ -20,9 +20,9 @@ const {dirname, join} = require('path');
 
 const leven = require('leven');
 
-const {clusters, distance} = require('../clusters');
-const {dom, props, rule, ruleset, score, type} = require('../index');
-const {domSort, inlineTextLength, linkDensity, max, staticDom,  sum} = require('../utils');
+const {clusters, distance} = require('../../clusters');
+const {dom, props, rule, ruleset, score, type} = require('../../index');
+const {domSort, inlineTextLength, linkDensity, max, staticDom,  sum} = require('../../utils');
 
 
 /**
@@ -188,7 +188,7 @@ class DiffStats {
 }
 
 function expectedAndSourceDocs(folder) {
-    const domFromFile = fileName => staticDom(readFileSync(join(dirname(__dirname), 'test', 'readability', folder, fileName)));
+    const domFromFile = fileName => staticDom(readFileSync(join(__dirname, 'test_data', folder, fileName)));
     return [domFromFile('expected.html'),
             domFromFile('source.html')];
 }
@@ -218,7 +218,7 @@ function readabilityDocPairs() {
 if (require.main === module) {
     // By default, just run the Readability examples and show how our current
     // coefficients score on them.
-    const {Annealer} = require('../optimizers');
+    const {Annealer} = require('../../optimizers');
     const {argv} = require('process');
 
     let coeffs = [1.5, 4.5, 2, 6.5, 2, 0.5, 0];
