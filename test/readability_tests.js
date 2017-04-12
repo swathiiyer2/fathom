@@ -14,7 +14,7 @@ describe('Readability ruleset finds content from...', function () {
      * textual content.
      */
     function snippetsFrom(doc) {
-        return tunedContentNodes()(doc).map(p => p.textContent.trim().substr(0, 20).trim());
+        return tunedContentNodes()(doc).map(fnode => fnode.element.textContent.trim().substr(0, 20).trim());
     }
 
     // ----------------------------- Tests: -------------------------------

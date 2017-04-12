@@ -1,6 +1,7 @@
 // The left-hand side of a rule
 
-const {maxes, getDefault, setDefault} = require('./utils');
+const {clusters, distance} = require('./clusters');
+const {maxes, getDefault, max, setDefault, sum} = require('./utils');
 
 
 /**
@@ -137,8 +138,25 @@ class TypeLhs extends Lhs {
         return new TypeMaxLhs(this._type);
     }
 
+    topTotalingCluster(options) {
+        return new TopTotalingClusterLhs(this._type, options);
+    }
+
     guaranteedType() {
         return this._type;
+    }
+}
+
+/**
+ * Abstract LHS that is an aggregate function taken across all fnodes of a type
+ *
+ * The main point here is that any aggregate function over a (typed) set of
+ * nodes depends on first computing all the rules that could emit those nodes
+ * (nodes of that type).
+ */
+class AggregateTypeLhs extends TypeLhs {
+    prerequisites(ruleset) {
+        return ruleset.inwardRulesThatCouldEmit(this._type);
     }
 }
 
@@ -146,7 +164,7 @@ class TypeLhs extends Lhs {
  * Internal representation of a LHS that has both type and max([NUMBER])
  * constraints. max(NUMBER != 1) support is not yet implemented.
  */
-class TypeMaxLhs extends TypeLhs {
+class TypeMaxLhs extends AggregateTypeLhs {
     /**
      * Return the max-scoring node (or nodes if there is a tie) of the given
      * type.
@@ -167,9 +185,34 @@ class TypeMaxLhs extends TypeLhs {
                 return maxes(getSuperFnodes(), fnode => fnode.scoreSoFarFor(self._type));
             });
     }
+}
 
-    prerequisites(ruleset) {
-        return ruleset.inwardRulesThatCouldEmit(this._type);
+class TopTotalingClusterLhs extends AggregateTypeLhs {
+    constructor(type, options) {
+        super(type);
+        this._options = options;
+    }
+
+    /**
+     * Group the nodes of my type into clusters, and return the cluster with
+     * the highest total score for that type.
+     */
+    fnodes(ruleset) {
+        // Get the nodes of the type:
+        const fnodesOfType = Array.from(super.fnodes(ruleset));
+        const nodesOfType = fnodesOfType.map(fnode => fnode.element);  // TODO: Delete this line, rename clusters() to cluster(), and make it return fnodes. You can have it call clusters() if you like.
+        // Cluster them:
+        const clusts = clusters(
+            nodesOfType,
+            this._options.splittingDistance || 3,
+            (a, b) => distance(a, b, this._options));
+        // Tag each cluster with the total of its nodes' scores:
+        const clustsAndSums = clusts.map(
+            clust => [clust,
+                      sum(clust.map(node => ruleset.fnodeForElement(node).scoreFor(this._type)))]);
+        // Take the highest-scoring:
+        const bestClust = max(clustsAndSums, clustAndSum => clustAndSum[1])[0];
+        return bestClust.map(node => ruleset.fnodeForElement(node));
     }
 }
 

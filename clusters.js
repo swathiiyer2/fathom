@@ -289,9 +289,9 @@ class DistanceMatrix {
  * Maybe later we'll consider score or notes.
  *
  * @arg {Array} elements DOM nodes to break into clusters
- * @arg {number} tooFar The closest-nodes :func:`distance` beyond which we will
- *     not attempt to unify 2 clusters. Make this larger to make larger
- *     clusters.
+ * @arg {number} splittingDistance The closest-nodes :func:`distance` beyond
+ *     which we will not attempt to unify 2 clusters. Make this larger to make
+ *     larger clusters.
  * @arg getDistance {function} A function that returns some notion of numerical
  *    distance between 2 nodes. Default: :func:`distance`
  * @return {Array} An Array of Arrays, with each Array containing all the
@@ -299,11 +299,11 @@ class DistanceMatrix {
  *     in any particular order. You may find :func:`domSort` helpful to remedy
  *     the latter.
  */
-function clusters(elements, tooFar, getDistance = distance) {
+function clusters(elements, splittingDistance, getDistance = distance) {
     const matrix = new DistanceMatrix(elements, getDistance);
     let closest;
 
-    while (matrix.numClusters() > 1 && (closest = matrix.closest()).distance < tooFar) {
+    while (matrix.numClusters() > 1 && (closest = matrix.closest()).distance < splittingDistance) {
         matrix.merge(closest.a, closest.b);
     }
 

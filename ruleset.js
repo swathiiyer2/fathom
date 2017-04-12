@@ -227,7 +227,10 @@ class BoundRuleset {
         return this._rulesThatCouldAdd.get(type);
     }
 
-    /** @return the Fathom node that describes the given DOM element */
+    /**
+     * @return the Fathom node that describes the given DOM element. This does
+     *     not trigger any execution, so the result may be incomplete.
+     */
     fnodeForElement(element) {
         return setDefault(this.elementCache,
                           element,

@@ -20,9 +20,8 @@ const {dirname, join} = require('path');
 
 const leven = require('leven');
 
-const {clusters, distance} = require('../clusters');
 const {dom, props, rule, ruleset, score, type} = require('../index');
-const {domSort, inlineTextLength, linkDensity, max, staticDom,  sum} = require('../utils');
+const {domSort, inlineTextLength, linkDensity, staticDom} = require('../utils');
 
 
 /**
@@ -55,64 +54,53 @@ function tunedContentNodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coef
         // because, no matter the other markup details, the main body text
         // is definitely going to have a bunch of text.
         rule(dom('p,div,li,code,blockquote,pre,h1,h2,h3,h4,h5,h6'), props(scoreByLength).type('paragraphish')),
-        // TODO: Maybe include <li>s, blockquotes, and such in here too,
-        // and let the linkDensity and clustering cull out the nav
-        // elements. Or just do a "blur" algorithm within the cluster,
-        // pulling in other elements with decent text density, good CSS
-        // smells, and such. (Interstitials like those probably won't split
-        // clusters if the stride cost is set low enough.) To test, add a
-        // very short paragraph in the midst of the long one, thus testing
-        // our leaning toward contiguousness.
+        // TODO: Consider a "blur" algorithm within the cluster, pulling in
+        // other elements with decent text density, good CSS smells, and such.
+        // (Interstitials like those probably won't split clusters if the
+        // stride cost is set low enough.) To test, add a very short paragraph
+        // in the midst of the long one, thus testing our leaning toward
+        // contiguousness.
 
         // Scale it by inverse of link density:
         rule(type('paragraphish'), score(fnode => (1 - linkDensity(fnode, fnode.noteFor('paragraphish').inlineLength)) * coeffLinkDensity)),
 
         // Give bonuses for being in p tags.
-        rule(dom('p'), score(coeffParagraphTag).type('paragraphish'))
+        rule(dom('p'), score(coeffParagraphTag).type('paragraphish')),
         // TODO: article tags, etc., too
 
         // TODO: Ignore invisible nodes so people can't game us with those.
+
+        // NEXT: Will this wait to fire until all other paragraphish -> paragraphish rules do? Yes. We need to treat all aggregates as we do max().
+        rule(type('paragraphish').topTotalingCluster({
+            splittingDistance: 3,
+            differentDepthCost: coeffDifferentDepth,
+            differentTagCost: coeffDifferentTag,
+            sameTagCost: coeffSameTag,
+            strideCost: coeffStride
+
+            // This is an addition to the distance
+            // function which makes nodes that have
+            // outlier lengths further away. It's meant to
+            // help filter out interstitials like ads.
+            // +1 to make a zero difference in length be 0
+            // /10 to bring (only) large differences in length into scale with the above costs
+            // additionalCost: (a, b) => Math.log(Math.abs(a.noteFor('paragraphish').inlineLength -
+            //                                             b.noteFor('paragraphish').inlineLength) / 10 + 1)
+            // TODO: Consider a logistic function instead of log.
+            }), type('content'))
+        //rule(type('content'), out('content').allThrough(domSort))
     );
 
-    // Return the nodes expressing a document's main textual content.
+    // Return the fnodes expressing a document's main textual content.
     function contentNodes(doc) {
         const facts = rules.against(doc);
-        const paragraphishes = facts.get(type('paragraphish'));
-        const paragraphishNodes = paragraphishes.map(fnode => fnode.element);
-        const clusts = clusters(
-            paragraphishNodes,
-            3,
-            (a, b) => distance(a, b, {differentDepthCost: coeffDifferentDepth,
-                                      differentTagCost: coeffDifferentTag,
-                                      sameTagCost: coeffSameTag,
-                                      strideCost: coeffStride
+        const content = facts.get(type('content'));
+        return domSort(content);
 
-                                      // This is an addition to the distance
-                                      // function which makes nodes that have
-                                      // outlier lengths further away. It's meant to
-                                      // help filter out interstitials like ads.
-                                      // +1 to make a zero difference in length be 0
-                                      // /10 to bring (only) large differences in length into scale with the above costs
-                                      // additionalCost: (a, b) => Math.log(Math.abs(a.noteFor('paragraphish').inlineLength -
-                                      //                                             b.noteFor('paragraphish').inlineLength) / 10 + 1)
-                                      // TODO: Consider a logistic function instead of log.
-            }));
-        // TODO: Probably promote someting like a "bestCluster()" to an in-
-        // ruleset aggregate function so its output can feed into other
-        // rules. It should take cost coefficients without requiring
-        // distance() itself to be wrapped and passed in.
+        // TODO: Use score as part of the distance metric, which should tend to
+        // push outlier-sized paragraphs out of clusters, especially if they're
+        // separated topographically (like copyright notices).
 
-        // Tag each cluster with the total of its paragraphs' scores:
-        const clustsAndSums = clusts.map(clust => [clust,
-                                                   sum(clust.map(para => facts.get(para).scoreFor('paragraphish')))]);
-        // TODO: Make clusters() take fnodes, not nodes, so we can call
-        // scoreFor directly on the fnode above.
-        // TODO: Once that's done, use score as part of the distance metric,
-        // which should tend to push outlier-sized paragraphs out of clusters,
-        // especially if they're separated topographically (like copyright
-        // notices).
-        const bestClust = max(clustsAndSums, clustAndSum => clustAndSum[1])[0];
-        return domSort(bestClust);
         // Other ideas: We could pick the cluster around the highest-scoring
         // node (which is more like what Readability does) or the highest-
         // scoring cluster by some formula (num typed nodes * scores of the
