@@ -410,14 +410,14 @@ class InwardRule extends Rule {
  */
 class OutwardRule extends Rule {
     /**
-     * Compute the whole thing, including any .through().
+     * Compute the whole thing, including any .through() and .allThrough().
      * Do not mark me done in ruleset.doneRules; out rules are never marked as
      * done so they can be requested many times without having to cache their
      * (potentially big, since they aren't necessarily fnodes?) results. (We
      * can add caching later if it proves beneficial.)
      */
     results(ruleset) {
-        return map(this.rhs.callback, this.lhs.fnodes(ruleset));
+        return this.rhs.allCallback(map(this.rhs.callback, this.lhs.fnodes(ruleset)));
     }
 
     /**

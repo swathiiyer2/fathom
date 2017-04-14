@@ -20,7 +20,7 @@ const {dirname, join} = require('path');
 
 const leven = require('leven');
 
-const {dom, props, rule, ruleset, score, type} = require('../index');
+const {dom, props, out, rule, ruleset, score, type} = require('../index');
 const {domSort, inlineTextLength, linkDensity, staticDom} = require('../utils');
 
 
@@ -70,7 +70,6 @@ function tunedContentFnodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coe
 
         // TODO: Ignore invisible nodes so people can't game us with those.
 
-        // NEXT: Will this wait to fire until all other paragraphish -> paragraphish rules do? Yes. We need to treat all aggregates as we do max().
         rule(type('paragraphish').topTotalingCluster({
             splittingDistance: 3,
             differentDepthCost: coeffDifferentDepth,
@@ -87,15 +86,14 @@ function tunedContentFnodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coe
             // additionalCost: (a, b) => Math.log(Math.abs(a.noteFor('paragraphish').inlineLength -
             //                                             b.noteFor('paragraphish').inlineLength) / 10 + 1)
             // TODO: Consider a logistic function instead of log.
-            }), type('content'))
-        //rule(type('content'), out('content').allThrough(domSort))
+            }), type('content')),
+        rule(type('content'), out('sortedContent').allThrough(domSort))
     );
 
     // Return the fnodes expressing a document's main textual content.
     function contentFnodes(doc) {
         const facts = rules.against(doc);
-        const content = facts.get(type('content'));
-        return domSort(content);
+        return facts.get('sortedContent');
 
         // TODO: Use score as part of the distance metric, which should tend to
         // push outlier-sized paragraphs out of clusters, especially if they're

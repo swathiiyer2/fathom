@@ -355,8 +355,8 @@ function page(scoringFunction) {
 /**
  * Sort the elements by their position in the DOM.
  *
- * @arg fnodes {Array} fnodes to sort. They will be sorted in place.
- * @return the original array, sorted
+ * @arg fnodes {iterable} fnodes to sort
+ * @return {Array} sorted fnodes
  */
 function domSort(fnodes) {
     function compare(a, b) {
@@ -370,8 +370,7 @@ function domSort(fnodes) {
             return 0;
         }
     }
-    fnodes.sort(compare);
-    return fnodes;
+    return Array.from(fnodes).sort(compare);
 }
 
 /**

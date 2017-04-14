@@ -19,8 +19,9 @@ const SUBFACTS = {
 /**
  * Expose the output of this rule's LHS as a "final result" to the surrounding
  * program. It will be available by calling :func:`~BoundRuleset.get` on the
- * ruleset and passing the key. You can run the nodes through a callback
- * function first by adding :func:`through()`.
+ * ruleset and passing the key. You can run each node through a callback
+ * function first by adding :func:`through()`, or you can run the entire set of
+ * nodes through a callback function by adding :func:`allThrough()`.
  */
 function out(key) {
     return new OutwardRhs(key);
@@ -293,20 +294,32 @@ class InwardRhs {
 }
 
 class OutwardRhs {
-    constructor(key, through = x => x) {
+    constructor(key, through = x => x, allThrough = x => x) {
         this.key = key;
         this.callback = through;
+        this.allCallback = allThrough;
     }
 
     /**
-     * Append ``.through`` to :func:`out` to run the nodes emitted from the LHS
-     * through an arbitrary function before returning them to the containing
-     * program. Example::
+     * Append ``.through`` to :func:`out` to run each :term:`fnode` emitted
+     * from the LHS through an arbitrary function before returning it to the
+     * containing program. Example::
      *
      *     out('titleLengths').through(fnode => fnode.noteFor('title').length)
      */
     through(callback) {
-        return new this.constructor(this.key, callback);
+        return new this.constructor(this.key, callback, this.allCallback);
+    }
+
+    /**
+     * Append ``.allThrough`` to :func:`out` to run the entire iterable of
+     * emitted :term:`fnodes<fnode>` through an arbitrary function before
+     * returning them to the containing program. Example::
+     *
+     *     out('sortedTitles').allThrough(domSort)
+     */
+    allThrough(callback) {
+        return new this.constructor(this.key, this.callback, callback);
     }
 
     asRhs() {
