@@ -2,7 +2,7 @@ const {forEach, map} = require('wu');
 
 const {CycleError} = require('./exceptions');
 const {Fnode} = require('./fnode');
-const {reversed, setDefault, toposort} = require('./utils');
+const {isDomElement, reversed, setDefault, toposort} = require('./utils');
 const {out, OutwardRhs} = require('./rhs');
 
 
@@ -130,8 +130,8 @@ class BoundRuleset {
             } else {
                 throw new Error(`There is no out() rule with key "${thing}".`);
             }
-        } else if (thing.nodeName !== undefined) {
-            // Return the fnode  and let it run type(foo) on demand, as people
+        } else if (isDomElement(thing)) {
+            // Return the fnode and let it run type(foo) on demand, as people
             // ask it things like scoreFor(foo).
             return this.fnodeForElement(thing);
         } else if (thing.asLhs !== undefined) {

@@ -381,6 +381,13 @@ function staticDom(html) {
     return jsdom(html, {features: {ProcessExternalResources: false}});
 }
 
+/**
+ * @return whether a thing appears to be a DOM element.
+ */
+function isDomElement(thing) {
+    return thing.nodeName !== undefined;
+}
+
 module.exports = {
     best,
     collapseWhitespace,
@@ -391,6 +398,7 @@ module.exports = {
     inlineTextLength,
     inlineTexts,
     isBlock,
+    isDomElement,
     isWhitespace,
     length,
     linkDensity,

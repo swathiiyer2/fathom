@@ -203,19 +203,17 @@ class TopTotalingClusterLhs extends AggregateTypeLhs {
         if (fnodesOfType.length === 0) {
             return [];
         }
-        const nodesOfType = fnodesOfType.map(fnode => fnode.element);  // TODO: Delete this line, rename clusters() to cluster(), and make it return fnodes. You can have it call clusters() if you like.
         // Cluster them:
         const clusts = clusters(
-            nodesOfType,
+            fnodesOfType,
             this._options.splittingDistance,
             (a, b) => distance(a, b, this._options));
         // Tag each cluster with the total of its nodes' scores:
         const clustsAndSums = clusts.map(
             clust => [clust,
-                      sum(clust.map(node => ruleset.fnodeForElement(node).scoreFor(this._type)))]);
-        // Take the highest-scoring:
-        const bestClust = max(clustsAndSums, clustAndSum => clustAndSum[1])[0];
-        return bestClust.map(node => ruleset.fnodeForElement(node));
+                      sum(clust.map(fnode => fnode.scoreFor(this._type)))]);
+        // Return the highest-scoring cluster:
+        return max(clustsAndSums, clustAndSum => clustAndSum[1])[0];
     }
 }
 
