@@ -190,7 +190,7 @@ class TypeMaxLhs extends AggregateTypeLhs {
 class TopTotalingClusterLhs extends AggregateTypeLhs {
     constructor(type, options) {
         super(type);
-        this._options = options;
+        this._options = options || {splittingDistance: 3};
     }
 
     /**
@@ -200,11 +200,14 @@ class TopTotalingClusterLhs extends AggregateTypeLhs {
     fnodes(ruleset) {
         // Get the nodes of the type:
         const fnodesOfType = Array.from(super.fnodes(ruleset));
+        if (fnodesOfType.length === 0) {
+            return [];
+        }
         const nodesOfType = fnodesOfType.map(fnode => fnode.element);  // TODO: Delete this line, rename clusters() to cluster(), and make it return fnodes. You can have it call clusters() if you like.
         // Cluster them:
         const clusts = clusters(
             nodesOfType,
-            this._options.splittingDistance || 3,
+            this._options.splittingDistance,
             (a, b) => distance(a, b, this._options));
         // Tag each cluster with the total of its nodes' scores:
         const clustsAndSums = clusts.map(

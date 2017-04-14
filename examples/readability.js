@@ -25,13 +25,13 @@ const {domSort, inlineTextLength, linkDensity, staticDom} = require('../utils');
 
 
 /**
- * The main entrypoint. Return a contentNodes(dom) function that extracts the
+ * The main entrypoint. Return a contentFnodes(dom) function that extracts the
  * content from a DOM.
  *
  * Take a bunch of optional coefficients to tune its behavior. Default is to
  * use the best-performing coefficients we've come up with so far.
  */
-function tunedContentNodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coeffLength = 2, coeffDifferentDepth = 6.5, coeffDifferentTag = 2, coeffSameTag = 0.5, coeffStride = 0) {
+function tunedContentFnodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coeffLength = 2, coeffDifferentDepth = 6.5, coeffDifferentTag = 2, coeffSameTag = 0.5, coeffStride = 0) {
     // The default coefficients are the ones that score best against a
     // subset of Readability test cases.
 
@@ -92,7 +92,7 @@ function tunedContentNodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coef
     );
 
     // Return the fnodes expressing a document's main textual content.
-    function contentNodes(doc) {
+    function contentFnodes(doc) {
         const facts = rules.against(doc);
         const content = facts.get(type('content'));
         return domSort(content);
@@ -108,7 +108,7 @@ function tunedContentNodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coef
         // short paragraphs are included.
     }
 
-    return contentNodes;
+    return contentFnodes;
 }
 
 /** Return the concatenated textual content of an entire DOM tree. */
@@ -134,10 +134,10 @@ function collapseNewlines(str) {
  * difference at the end.
  */
 class DiffStats {
-    constructor(contentNodes) {
+    constructor(contentFnodes) {
         this.lengthOfExpectedTexts = 0;
         this.lengthOfDiffs = 0;
-        this.contentNodes = contentNodes || tunedContentNodes();
+        this.contentFnodes = contentFnodes || tunedContentFnodes();
     }
 
     /**
@@ -153,7 +153,7 @@ class DiffStats {
         // Currently, this is just a surrounding-whitespace-
         // insensitive comparison of the text content.
         const expectedText = collapseNewlines(trimLines(textContent(expectedDom)));
-        const gotText = collapseNewlines(trimLines(this.contentNodes(sourceDom).map(node => node.textContent).join('\n')));
+        const gotText = collapseNewlines(trimLines(this.contentFnodes(sourceDom).map(fnode => fnode.element.textContent).join('\n')));
         this.lengthOfExpectedTexts += expectedText.length;
         this.lengthOfDiffs += leven(expectedText, gotText);
 
@@ -182,7 +182,7 @@ function expectedAndSourceDocs(folder) {
 }
 
 function deviationScore(docPairs, coeffs = []) {
-    const stats = new DiffStats(tunedContentNodes(...coeffs));
+    const stats = new DiffStats(tunedContentFnodes(...coeffs));
     for (let pair of docPairs) {
         stats.compare(...pair);
     }
@@ -211,7 +211,7 @@ if (require.main === module) {
 
     let coeffs = [1.5, 4.5, 2, 6.5, 2, 0.5, 0];
 
-    class ContentNodesTuner extends Annealer {
+    class ContentFnodesTuner extends Annealer {
         constructor() {
             super();
             const docPairs = readabilityDocPairs();
@@ -232,7 +232,7 @@ if (require.main === module) {
 
     if (argv[2] == '--tune') {
         // Tune coefficients using simulated annealing.
-        const annealer = new ContentNodesTuner();
+        const annealer = new ContentFnodesTuner();
         coeffs = annealer.anneal();
     }
     console.log('Tuned coefficients:', coeffs);
@@ -244,5 +244,5 @@ module.exports = {
     deviationScore,
     readabilityDocPairs,
     textContent,
-    tunedContentNodes
+    tunedContentFnodes
 };
