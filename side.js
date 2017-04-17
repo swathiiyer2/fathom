@@ -61,8 +61,8 @@ class Side {
         return this._and('max');
     }
 
-    topTotalingCluster(options) {
-        return this._and('topTotalingCluster', options);
+    bestCluster(options) {
+        return this._and('bestCluster', options);
     }
 
     props(callback) {

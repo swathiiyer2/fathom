@@ -35,7 +35,7 @@ describe('LHS', function () {
         `);
         const rules = ruleset(
             rule(dom('div'), type('smoo')),
-            rule(type('smoo').topTotalingCluster(), out('cluster'))
+            rule(type('smoo').bestCluster(), out('cluster'))
         );
         const facts = rules.against(doc);
         assert.deepEqual(facts.get('cluster'), []);

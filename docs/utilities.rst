@@ -25,10 +25,6 @@ Fathom provides a hierarchal clustering algorithm that helps you group nodes int
       [[nodeA, nodeB, nodeC],
        [nodeD]]
 
-   .. note::
-
-      ``clusters()`` takes raw DOM nodes, not :term:`fnodes<fnode>`.
-
    Various factors influence the measured distance between nodes. The first is the obvious one: topological distance, the number of steps along the DOM tree from one node to another.
 
    The second is structural similarity. In the following, the divs ``a`` and ``b`` are farther apart…
@@ -64,7 +60,7 @@ Fathom provides a hierarchal clustering algorithm that helps you group nodes int
 
    At present, the costs for each factor are constants in the :func:`distance` function. They will become settable in a future release.
 
-.. autofunction:: distance
+.. autofunction:: distance(fnodeA, fnodeB, {differentDepthCost = 2, differentTagCost = 2, sameTagCost = 1, strideCost = 1})
 
 Other
 =====

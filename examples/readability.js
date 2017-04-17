@@ -71,25 +71,25 @@ function tunedContentFnodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coe
         // TODO: Ignore invisible nodes so people can't game us with those.
 
         rule(type('paragraphish')
-                .topTotalingCluster({splittingDistance: 3,
-                                     // This is an addition to the distance
-                                     // function which makes nodes that have
-                                     // outlier lengths further away. It's
-                                     // meant to help filter out interstitials
-                                     // like ads.
-                                     // +1 to make a zero difference in length
-                                     //     be 0
-                                     // /10 to bring (only) large differences
-                                     //     in length into scale with the above
-                                     //     costs
-                                     // additionalCost: (a, b) => Math.log(Math.abs(a.noteFor('paragraphish').inlineLength -
-                                     //                                             b.noteFor('paragraphish').inlineLength) / 10 + 1)
-                                     // TODO: Consider a logistic function
-                                     // instead of log.
-                                     differentDepthCost: coeffDifferentDepth,
-                                     differentTagCost: coeffDifferentTag,
-                                     sameTagCost: coeffSameTag,
-                                     strideCost: coeffStride}),
+                .bestCluster({splittingDistance: 3,
+                              // This is an addition to the distance
+                              // function which makes nodes that have
+                              // outlier lengths further away. It's
+                              // meant to help filter out interstitials
+                              // like ads.
+                              // +1 to make a zero difference in length
+                              //     be 0
+                              // /10 to bring (only) large differences
+                              //     in length into scale with the above
+                              //     costs
+                              // additionalCost: (a, b) => Math.log(Math.abs(a.noteFor('paragraphish').inlineLength -
+                              //                                             b.noteFor('paragraphish').inlineLength) / 10 + 1)
+                              // TODO: Consider a logistic function
+                              // instead of log.
+                              differentDepthCost: coeffDifferentDepth,
+                              differentTagCost: coeffDifferentTag,
+                              sameTagCost: coeffSameTag,
+                              strideCost: coeffStride}),
 
              out('content').allThrough(domSort))
     );

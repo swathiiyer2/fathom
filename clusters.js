@@ -293,7 +293,8 @@ class DistanceMatrix {
  *
  * Maybe later we'll consider score or notes.
  *
- * @arg {Array} fnodes :term:`fnodes<fnode>` to group into clusters
+ * @arg {Fnode[]|Node[]} fnodes :term:`fnodes<fnode>` or DOM nodes to group
+ *     into clusters
  * @arg {number} splittingDistance The closest-nodes :func:`distance` beyond
  *     which we will not attempt to unify 2 clusters. Make this larger to make
  *     larger clusters.
@@ -304,8 +305,8 @@ class DistanceMatrix {
  *     in any particular order. You may find :func:`domSort` helpful to remedy
  *     the latter.
  */
-function clusters(elements, splittingDistance, getDistance = distance) {
-    const matrix = new DistanceMatrix(elements, getDistance);
+function clusters(fnodes, splittingDistance, getDistance = distance) {
+    const matrix = new DistanceMatrix(fnodes, getDistance);
     let closest;
 
     while (matrix.numClusters() > 1 && (closest = matrix.closest()).distance < splittingDistance) {

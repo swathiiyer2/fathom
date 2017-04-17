@@ -38,6 +38,9 @@ Left-hand sides are currently a few special forms which select nodes to be fed t
    .. autofunction:: TypeLhs#max
       :short-name:
 
+   .. autofunction:: TypeLhs#bestCluster
+      :short-name:
+
 .. autofunction:: and(typeCall[, typeCall, ...])
 
 Right-hand Sides

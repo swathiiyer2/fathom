@@ -138,9 +138,29 @@ class TypeLhs extends Lhs {
         return new TypeMaxLhs(this._type);
     }
 
-    topTotalingCluster(options) {
-        return new TopTotalingClusterLhs(this._type, options);
+    /**
+     * Take the nodes selected by a ``type`` call to the left, group them into
+     * clusters, and return the nodes in the cluster that has the highest total
+     * score (on the relevant type).
+     *
+     * Nodes come out in arbitrary order, so, if you plan to emit them,
+     * consider using ``.out('whatever').allThrough(domSort)``. See
+     * :func:`domSort`.
+     *
+     * If multiple clusters have equally high scores, return an arbitrary one,
+     * because Fathom has no way to represent arrays of arrays in rulesets.
+     *
+     * @arg options {Object} The same depth costs taken by :func:`distance`,
+     *     plus ``splittingDistance``, which is the distance beyond which 2
+     *     clusters will be considered separate. ``splittingDistance``, if
+     *     omitted, defaults to 3.
+     */
+    bestCluster(options) {
+        return new BestClusterLhs(this._type, options);
     }
+
+    // Other clustering calls could be called biggestCluster() (having the most
+    // nodes) and bestAverageCluster() (having the highest average score).
 
     guaranteedType() {
         return this._type;
@@ -187,7 +207,7 @@ class TypeMaxLhs extends AggregateTypeLhs {
     }
 }
 
-class TopTotalingClusterLhs extends AggregateTypeLhs {
+class BestClusterLhs extends AggregateTypeLhs {
     constructor(type, options) {
         super(type);
         this._options = options || {splittingDistance: 3};
