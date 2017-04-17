@@ -85,7 +85,13 @@ function tunedContentFnodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coe
                               // additionalCost: (a, b) => Math.log(Math.abs(a.noteFor('paragraphish').inlineLength -
                               //                                             b.noteFor('paragraphish').inlineLength) / 10 + 1)
                               // TODO: Consider a logistic function
-                              // instead of log.
+                              // instead of log. Those have hard upper and
+                              // lower bounds. A sigmoid especially. Actually,
+                              // they may be better altogether, since they have
+                              // a gentle slope at the beginning, which is a
+                              // good intuitive match for not scoring a 1, 2,
+                              // or 5-char paragraph too high but then starting
+                              // to take off as we get to sentence length.
                               differentDepthCost: coeffDifferentDepth,
                               differentTagCost: coeffDifferentTag,
                               sameTagCost: coeffSameTag,
@@ -98,9 +104,13 @@ function tunedContentFnodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coe
     function contentFnodes(doc) {
         return rules.against(doc).get('content');
 
-        // TODO: Use score as part of the distance metric, which should tend to
-        // push outlier-sized paragraphs out of clusters, especially if they're
-        // separated topographically (like copyright notices).
+        // TODO: Try a distance function which makes nodes closer if they have
+        // nearer scores, which should tend to push outlier-sized paragraphs
+        // out of clusters, especially if they're separated topographically
+        // (like copyright notices).
+
+        // TODO: Add something to sniff CSS classes, like things containing
+        // "body" as partial class names.
 
         // Other ideas: We could pick the cluster around the highest-scoring
         // node (which is more like what Readability does) or the highest-
