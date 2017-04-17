@@ -374,18 +374,20 @@ function domSort(fnodes) {
 }
 
 /**
+ * @return whether a thing appears to be a DOM element.
+ */
+function isDomElement(thing) {
+    return thing.nodeName !== undefined;
+}
+
+// -------- Methods below are private to Fathom. --------
+
+/**
  * Parse an HTML doc, and return a DOM-compliant interface to it. Do not
  * execute any of its inline scripts.
  */
 function staticDom(html) {
     return jsdom(html, {features: {ProcessExternalResources: false}});
-}
-
-/**
- * @return whether a thing appears to be a DOM element.
- */
-function isDomElement(thing) {
-    return thing.nodeName !== undefined;
 }
 
 module.exports = {
