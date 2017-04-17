@@ -4,11 +4,27 @@ Version History
 
 2.1
 ===
+Clustering as a first-class construct, full docs, and automatic optimization of score coefficients headline this release.
 
-* Let costs be passed into distance() and clusters() so we can tune them per ruleset.
+Clustering
+----------
+* Make clustering available *within* a ruleset rather than just as an imperative sidecar, via :func:`bestCluster`.
+* Let costs be passed into :func:`distance` and :func:`clusters` so we can tune them per ruleset.
+* Make clustering about 26% faster.
+* Let :func:`clusters` and :func:`distance` optionally take :term:`fnodes<fnode>` instead of raw DOM nodes.
+* Revise clustering :func:`distance` function to not crash if node A is within node B and to return MAX_VALUE if there is any container relationship. This should make Readability-like clustering algorithms work out nicely, since we're interested only in the outer nodes. Pushing the inner ones off to the edge of the world removes them from being considered when we go to paste the largest cluster back together.
+* Skip the expensive stride node computation during clustering if you pass 0 as its coefficient.
+
+More
+----
 * Add nice documentation using Sphinx.
+* Add score optimization machinery based on simulated annealing. This seems to do well on stepwise functions, where Powell's and other continuous methods get hung up on the flats.
+* Add a Readability-alike content-extraction ruleset as an example.
+* Add .babelrc file so fathom can be used as a dep in webpack/Babel projects. (jezell)
+* Add :func:`allThrough`, which comes in handy for sorting the nodes of a cluster.
 * Get the Chrome debugger working with our tests again (``make debugtest``).
 * Officially support operating on DOM subtrees (which did work previously).
+* Fix :func:`linkDensity` utility function that wouldn't run. Remove hard-coded type from it.
 
 2.0
 ===
@@ -17,7 +33,8 @@ The focii for 2.0 are syntactic sugar and support for larger, more powerful rule
 * "Yankers" or aggregate functions are now part of the ruleset: :func:`max` and :func:`and` for now, with more in a later release. This in-ruleset mapping from the fuzzy domain of scores back to the boolean domain of types complements the opposite mapping provided by :func:`score` and lets ruleset authors choose between efficiency and completeness. It also saves imperative programming where maxima are referenced from more than one place. Finally, it opens the door to automatic optimization down the road.
 * Answers are computed lazily, running only the necessary rules each time you call :func:`~BoundRuleset.get` and caching intermediate results to save work on later calls. We thus eschew 1.x's strategy of emitting the entire scored world for the surrounding imperative program to examine and instead expose a factbase that acts like a lazy hash of answers. This allows for large, sophisticated rulesets that are nonetheless fast and can be combined to reuse parts (see :func:`Ruleset.rules()`). Of course, if you still want to imbibe the entire scored corpus of nodes in your surrounding program, you can simply yank all nodes of a type using the :func:`type` yanker: just point it to :func:`out`, and the results will be available from the outside: ``rule(type('foo'), out('someKey'))``.
 * We expand the domain of concern of a ruleset from a single dimension ("Find just the ads!") to multiple ones ("Find the ads and the navigation and the products and the prices!"). This is done by making scores and notes per-type.
-* The rule syntax has been richly sugared to…
+* The rule syntax has been richly sugared
+  to…
     * be shorter and easier to read in most cases
     * surface more info declaratively so the query planner can take advantage of it (:func:`props` is where the old-style ranker functions went, but avoid them when you don't need that much power, and you'll reap a reward of concision and efficiently planned queries)
     * allow you to concisely factor up repeated parts of complex LHSs and RHSs
