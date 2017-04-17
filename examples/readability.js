@@ -91,14 +91,12 @@ function tunedContentFnodes(coeffLinkDensity = 1.5, coeffParagraphTag = 4.5, coe
                                      sameTagCost: coeffSameTag,
                                      strideCost: coeffStride}),
 
-             type('content')),
-        rule(type('content'), out('sortedContent').allThrough(domSort))
+             out('content').allThrough(domSort))
     );
 
     // Return the fnodes expressing a document's main textual content.
     function contentFnodes(doc) {
-        const facts = rules.against(doc);
-        return facts.get('sortedContent');
+        return rules.against(doc).get('content');
 
         // TODO: Use score as part of the distance metric, which should tend to
         // push outlier-sized paragraphs out of clusters, especially if they're
