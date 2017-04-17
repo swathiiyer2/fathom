@@ -35,6 +35,7 @@ The focii for 2.0 are syntactic sugar and support for larger, more powerful rule
 * We expand the domain of concern of a ruleset from a single dimension ("Find just the ads!") to multiple ones ("Find the ads and the navigation and the products and the prices!"). This is done by making scores and notes per-type.
 * The rule syntax has been richly sugared
   to…
+
     * be shorter and easier to read in most cases
     * surface more info declaratively so the query planner can take advantage of it (:func:`props` is where the old-style ranker functions went, but avoid them when you don't need that much power, and you'll reap a reward of concision and efficiently planned queries)
     * allow you to concisely factor up repeated parts of complex LHSs and RHSs
