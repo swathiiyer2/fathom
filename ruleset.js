@@ -2,7 +2,7 @@ const {forEach, map} = require('wu');
 
 const {CycleError} = require('./exceptions');
 const {Fnode} = require('./fnode');
-const {reversed, setDefault, toposort} = require('./utils');
+const {isDomElement, reversed, setDefault, toposort} = require('./utils');
 const {out, OutwardRhs} = require('./rhs');
 
 
@@ -130,8 +130,8 @@ class BoundRuleset {
             } else {
                 throw new Error(`There is no out() rule with key "${thing}".`);
             }
-        } else if (thing.nodeName !== undefined) {
-            // Return the fnode  and let it run type(foo) on demand, as people
+        } else if (isDomElement(thing)) {
+            // Return the fnode and let it run type(foo) on demand, as people
             // ask it things like scoreFor(foo).
             return this.fnodeForElement(thing);
         } else if (thing.asLhs !== undefined) {
@@ -227,7 +227,10 @@ class BoundRuleset {
         return this._rulesThatCouldAdd.get(type);
     }
 
-    /** @return the Fathom node that describes the given DOM element */
+    /**
+     * @return the Fathom node that describes the given DOM element. This does
+     *     not trigger any execution, so the result may be incomplete.
+     */
     fnodeForElement(element) {
         return setDefault(this.elementCache,
                           element,
@@ -407,14 +410,14 @@ class InwardRule extends Rule {
  */
 class OutwardRule extends Rule {
     /**
-     * Compute the whole thing, including any .through().
+     * Compute the whole thing, including any .through() and .allThrough().
      * Do not mark me done in ruleset.doneRules; out rules are never marked as
      * done so they can be requested many times without having to cache their
      * (potentially big, since they aren't necessarily fnodes?) results. (We
      * can add caching later if it proves beneficial.)
      */
     results(ruleset) {
-        return map(this.rhs.callback, this.lhs.fnodes(ruleset));
+        return this.rhs.allCallback(map(this.rhs.callback, this.lhs.fnodes(ruleset)));
     }
 
     /**

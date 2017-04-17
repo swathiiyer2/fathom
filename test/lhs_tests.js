@@ -29,6 +29,18 @@ describe('LHS', function () {
         assert.equal(best[1].element.nodeName, 'DIV');
     });
 
+    it('returns [] for a top-totaling cluster of 0 nodes', function () {
+        const doc = staticDom(`
+            <p></p>
+        `);
+        const rules = ruleset(
+            rule(dom('div'), type('smoo')),
+            rule(type('smoo').topTotalingCluster(), out('cluster'))
+        );
+        const facts = rules.against(doc);
+        assert.deepEqual(facts.get('cluster'), []);
+    });
+
     it('can have its type overridden', function () {
         const doc = staticDom('<p></p>');
         const rules = ruleset(

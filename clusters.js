@@ -1,5 +1,5 @@
 const {flatten} = require('wu');
-const {isWhitespace, min} = require('./utils');
+const {isDomElement, isWhitespace, min} = require('./utils');
 
 
 /**
@@ -39,7 +39,7 @@ function numStrides(left, right) {
 }
 
 /**
- * Return a distance measurement between 2 DOM nodes.
+ * Return a distance measurement between 2 DOM nodes or :term:`fnodes<fnode>`.
  *
  * This is largely an implementation detail of :func:`clusters`, but you can
  * call it yourself if you wish to implement your own clustering. Takes O(n log
@@ -48,6 +48,8 @@ function numStrides(left, right) {
  * Note that the default costs may change; pass them in explicitly if they are
  * important to you.
  *
+ * @arg fnodeA {Node|Fnode}
+ * @arg fnodeB {Node|Fnode}
  * @arg differentDepthCost {number} Cost for each level deeper one node is than
  *    the other below their common ancestor
  * @arg differentTagCost {number} Cost for a level below the common ancestor
@@ -57,8 +59,8 @@ function numStrides(left, right) {
  * @arg strideCost {number} Cost for each stride node between A and B
  *
  */
-function distance(elementA,
-                  elementB,
+function distance(fnodeA,
+                  fnodeB,
                   {differentDepthCost = 2,
                    differentTagCost = 2,
                    sameTagCost = 1,
@@ -69,9 +71,12 @@ function distance(elementA,
 
     // TODO: Test and tune default costs. They're off the cuff at the moment.
 
-    if (elementA === elementB) {
+    if (fnodeA === fnodeB) {
         return 0;
     }
+
+    const elementA = isDomElement(fnodeA) ? fnodeA : fnodeA.element;
+    const elementB = isDomElement(fnodeB) ? fnodeB : fnodeB.element;
 
     // Stacks that go from the common ancestor all the way to A and B:
     const aAncestors = [elementA];
@@ -288,10 +293,10 @@ class DistanceMatrix {
  *
  * Maybe later we'll consider score or notes.
  *
- * @arg {Array} elements DOM nodes to break into clusters
- * @arg {number} tooFar The closest-nodes :func:`distance` beyond which we will
- *     not attempt to unify 2 clusters. Make this larger to make larger
- *     clusters.
+ * @arg {Array} fnodes :term:`fnodes<fnode>` to group into clusters
+ * @arg {number} splittingDistance The closest-nodes :func:`distance` beyond
+ *     which we will not attempt to unify 2 clusters. Make this larger to make
+ *     larger clusters.
  * @arg getDistance {function} A function that returns some notion of numerical
  *    distance between 2 nodes. Default: :func:`distance`
  * @return {Array} An Array of Arrays, with each Array containing all the
@@ -299,11 +304,11 @@ class DistanceMatrix {
  *     in any particular order. You may find :func:`domSort` helpful to remedy
  *     the latter.
  */
-function clusters(elements, tooFar, getDistance = distance) {
+function clusters(elements, splittingDistance, getDistance = distance) {
     const matrix = new DistanceMatrix(elements, getDistance);
     let closest;
 
-    while (matrix.numClusters() > 1 && (closest = matrix.closest()).distance < tooFar) {
+    while (matrix.numClusters() > 1 && (closest = matrix.closest()).distance < splittingDistance) {
         matrix.merge(closest.a, closest.b);
     }
 

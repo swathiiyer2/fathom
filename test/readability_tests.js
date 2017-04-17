@@ -1,6 +1,6 @@
 const assert = require('chai').assert;
 
-const {deviationScore, readabilityDocPairs, tunedContentNodes} = require('../examples/readability');
+const {deviationScore, readabilityDocPairs, tunedContentFnodes} = require('../examples/readability');
 const {staticDom} = require('../utils');
 
 
@@ -14,7 +14,7 @@ describe('Readability ruleset finds content from...', function () {
      * textual content.
      */
     function snippetsFrom(doc) {
-        return tunedContentNodes()(doc).map(p => p.textContent.trim().substr(0, 20).trim());
+        return tunedContentFnodes()(doc).map(fnode => fnode.element.textContent.trim().substr(0, 20).trim());
     }
 
     // ----------------------------- Tests: -------------------------------

@@ -355,22 +355,22 @@ function page(scoringFunction) {
 /**
  * Sort the elements by their position in the DOM.
  *
- * @arg elements {Array} DOM nodes to sort. They will be sorted in place.
- * @return the original array, sorted
+ * @arg fnodes {iterable} fnodes to sort
+ * @return {Array} sorted fnodes
  */
-function domSort(elements) {
+function domSort(fnodes) {
     function compare(a, b) {
-        const position = a.compareDocumentPosition(b);
-        if (position & a.DOCUMENT_POSITION_FOLLOWING) {
+        const element = a.element;
+        const position = element.compareDocumentPosition(b.element);
+        if (position & element.DOCUMENT_POSITION_FOLLOWING) {
             return -1;
-        } else if (position & a.DOCUMENT_POSITION_PRECEDING) {
+        } else if (position & element.DOCUMENT_POSITION_PRECEDING) {
             return 1;
         } else {
             return 0;
         }
     }
-    elements.sort(compare);
-    return elements;
+    return Array.from(fnodes).sort(compare);
 }
 
 /**
@@ -379,6 +379,13 @@ function domSort(elements) {
  */
 function staticDom(html) {
     return jsdom(html, {features: {ProcessExternalResources: false}});
+}
+
+/**
+ * @return whether a thing appears to be a DOM element.
+ */
+function isDomElement(thing) {
+    return thing.nodeName !== undefined;
 }
 
 module.exports = {
@@ -391,6 +398,7 @@ module.exports = {
     inlineTextLength,
     inlineTexts,
     isBlock,
+    isDomElement,
     isWhitespace,
     length,
     linkDensity,

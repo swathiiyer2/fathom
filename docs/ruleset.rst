@@ -89,6 +89,9 @@ A good practice is to use more declarative calls—:func:`score`, :func:`note`, 
    .. autofunction:: OutwardRhs#through
       :short-name:
 
+   .. autofunction:: OutwardRhs#allThrough
+      :short-name:
+
 .. autofunction:: InwardRhs#score
    :short-name:
 
