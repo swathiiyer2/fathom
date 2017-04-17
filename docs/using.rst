@@ -5,7 +5,7 @@ Using Fathom
 Where It Works
 ==============
 
-Fathom works against the DOM API, so you can use it server-side with ``jsdom`` (which the test harness uses) or another implementation, or you can embed it in a browser and pass it a native DOM. Experimentally, you can also pass in a subtree of a DOM.
+Fathom works against the DOM API, so you can use it server-side with ``jsdom`` (which the test harness uses) or another implementation, or you can embed it in a browser and pass it a native DOM. You can also pass in a subtree of a DOM.
 
 Kate Hudson has put together `a Firefox add-on that lets you see the results of Fathom 1.0 rulesets against the currently loaded page <https://github.com/k88hudson/ffmetadata>`_, as a new pane of the Developer Tools.
 
@@ -40,9 +40,16 @@ See below for a full definition of `type`, `score`, and the rest of the Fathom l
 Rules, Sides, and Flows
 =======================
 
-Each rule is shaped like ``rule(left-hand side, right-hand side)``. The *left-hand side* (LHS) pulls in one or more DOM nodes as input: either ones that match a certain CSS selector (:func:`dom()`) or ones tagged with a certain type by other rules (:func:`type()`). The *right-hand side* (RHS) then decides what to do with those nodes: assigning an additional type, scaling the score, scribbling a note on it, or some combination thereof. Envision the rule as a pipeline, with the DOM flowing in one end, nodes being picked and passed along to RHSs which twiddle them, and then finally falling out right side, where they might flow into other rules whose LHSs pick them up.
+Each rule is shaped like ``rule(left-hand side, right-hand side)``. The *left-hand side* (LHS) pulls in one or more DOM nodes as input: either ones that match a certain CSS selector (:func:`dom()`) or ones tagged with a certain type by other rules (:func:`type()`). The *right-hand side* (RHS) then decides what to do with those nodes:
 
-It's snakey sort of flow. This rule, which takes in fnodes that have previously been identified as text containers and adds a word-count annotation... ::
+* Assigning an additional type
+* Scaling the score
+* Scribbling a note on it
+* Or some combination thereof
+
+Envision the rule as a pipeline, with the DOM flowing in one end, nodes being picked and passed along to RHSs which twiddle them, and then finally falling out right side, where they might flow into other rules whose LHSs pick them up. It's snakey sort of flow.
+
+This rule, which takes in :term:`fnodes<fnode>` that have previously been identified as text containers and adds a word-count annotation... ::
 
     rule(type('textContainer'), type('countedWords').note(fnode => fnode.element.textContent.split(/\s+/).length))
 
@@ -90,11 +97,3 @@ Or if you have a reference to a DOM element from elsewhere in your program, you 
 .. code-block:: js
 
    const fnode = facts.get(dom.getElementById('aTitle'));
-
-.. note::
-
-   A DOM subtree can be passed in instead, if you like:
-
-   .. code-block:: js
-
-      const subtreeFacts = rules.against(dom.body.firstElementChild);
