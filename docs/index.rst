@@ -20,6 +20,7 @@ Contents
 
    intro
    using
+   clustering
    ruleset
    fnodes
    utilities

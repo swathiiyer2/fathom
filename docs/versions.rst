@@ -20,7 +20,7 @@ More
 * Add nice documentation using Sphinx.
 * Add score optimization machinery based on simulated annealing. This seems to do well on stepwise functions, where Powell's and other continuous methods get hung up on the flats.
 * Add a Readability-alike content-extraction ruleset as an example.
-* Add .babelrc file so fathom can be used as a dep in webpack/Babel projects. (jezell)
+* Add .babelrc file so Fathom can be used as a dep in webpack/Babel projects. (jezell)
 * Add :func:`allThrough`, which comes in handy for sorting the nodes of a cluster.
 * Get the Chrome debugger working with our tests again (``make debugtest``).
 * Officially support operating on DOM subtrees (which did work previously).

@@ -291,7 +291,7 @@ class DistanceMatrix {
  * clusters we're talking about in the DOM will tend to be adjacent, not
  * overlapping. We haven't tried other linkage criteria yet.
  *
- * Maybe later we'll consider score or notes.
+ * In a later release, we may consider score or notes.
  *
  * @arg {Fnode[]|Node[]} fnodes :term:`fnodes<fnode>` or DOM nodes to group
  *     into clusters
