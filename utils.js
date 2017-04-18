@@ -1,4 +1,3 @@
-const {jsdom} = require('jsdom');
 const {forEach, map} = require('wu');
 
 const {CycleError} = require('./exceptions');
@@ -387,6 +386,7 @@ function isDomElement(thing) {
  * execute any of its inline scripts.
  */
 function staticDom(html) {
+    const {jsdom} = require('jsdom');
     return jsdom(html, {features: {ProcessExternalResources: false}});
 }
 
