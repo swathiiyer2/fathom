@@ -172,7 +172,8 @@ class InwardRhs {
 
     /**
      * Multiply the score of the input node by some number, which can be >1 to
-     * increase the score or <1 to decrease it.
+     * increase the score or <1 to decrease it (though negative scores are not
+     * recommended due to constant sign-flipping).
      *
      * Since every node can have multiple, independent scores (one for each type),
      * this applies to the type explicitly set by the RHS or, if none, to the type

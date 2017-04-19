@@ -23,6 +23,12 @@ class Annealer {
         this.BOLTZMANNS = 1.3806485279e-23;
     }
 
+    /**
+     * Iterate over a variety of random solutions for a finite time, and return
+     * the best we come up with.
+     *
+     * @return {number[]} Coefficients we arrived at
+     */
     anneal() {
         let temperature = this.INITIAL_TEMPERATURE;
         let currentSolution = this.initialSolution();
@@ -57,6 +63,30 @@ class Annealer {
         }
         console.log('Iterations:', n, 'using', m, 'jumps.');
         return currentSolution;
+    }
+
+    /**
+     * @return {number[]} Coefficients to begin the random walk from. The
+     *     quality of this solution is not very important.
+     */
+    initialSolution() {
+        throw new Error('initialSolution() must be overridden.');
+    }
+
+    /**
+     * @return {number[]} Coefficients randomly changed slightly from the
+     *     passed-in ones
+     */
+    randomTransition(coeffs) {
+        throw new Error('randomTransition() must be overridden.');
+    }
+
+    /**
+     * @return {number} A cost estimate for the passed-in solution, on an
+     *     arbitrary scale. Lower signifies a better solution.
+     */
+    solutionCost(coeffs) {
+        throw new Error('solutionCost() must be overridden.');
     }
 }
 

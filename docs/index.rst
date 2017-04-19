@@ -21,6 +21,7 @@ Contents
    intro
    using
    clustering
+   optimization
    ruleset
    fnodes
    utilities
