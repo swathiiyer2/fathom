@@ -1,0 +1,7 @@
+/docs/tooling/
+/examples
+/test
+
+# npm pack doesn't seem to get these from .gitignore:
+/coverage
+/docs/_build
