@@ -4,7 +4,7 @@ Optimization
 
 Selecting the optimal :func:`score` coefficients in a complex ruleset is tricky, but it can have a huge effect on accuracy. Manual tweaking, supported by a laboriously constructed test harness, becomes untenable with more than a few coefficients, so we recommend letting the machine figure them out.
 
-To prepare your ruleset for automatic optimization, replace its scoring and other scaling constants with JS variables, and wrap it in a function which takes an array of values and plops them into those variables:
+To prepare your ruleset for automatic optimization, replace its scoring and other scaling constants with JS variables, and wrap it in a function which takes a series of values and plops them into those variables:
 
    .. code-block:: js
       :emphasize-lines: 13,21,23
