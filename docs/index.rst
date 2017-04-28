@@ -12,8 +12,14 @@ Fathom
 
 Find meaning in the web.
 
-Contents
-========
+Get Fathom
+===========
+
+* `source code <https://github.com/mozilla/fathom>`_
+* `npm package <https://www.npmjs.com/package/fathom-web>`_
+
+Documentation
+=============
 
 .. toctree::
    :maxdepth: 2
