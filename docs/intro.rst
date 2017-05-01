@@ -31,4 +31,8 @@ Bonus Features
 Support
 =======
 
-If the rest of this documentation doesn't answer your question, join us in IRC: #fathom on irc.mozilla.org. In fact, join us regardless. Also feel free to open `an issue on GitHub <https://github.com/mozilla/fathom/issues>`_.
+You can find us on...
+
+* #fathom on irc.mozilla.org
+* `GitHub <https://github.com/mozilla/fathom>`_
+* `The mailing list <https://mail.mozilla.org/listinfo/fathom>`_
