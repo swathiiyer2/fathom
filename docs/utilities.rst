@@ -22,7 +22,8 @@ Import them from ``fathom-web/utils``. For example...
 .. autofunction:: isWhitespace
 .. autofunction:: length
 .. autofunction:: linkDensity
-.. autofunction:: max
+.. autofunction:: utils.max
+   :short-name:
 .. autofunction:: maxes
 .. autofunction:: min
 .. autoclass:: NiceSet
