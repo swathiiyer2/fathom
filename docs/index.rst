@@ -26,9 +26,9 @@ Documentation
 
    intro
    using
+   ruleset
    clustering
    optimization
-   ruleset
    fnodes
    utilities
    development
