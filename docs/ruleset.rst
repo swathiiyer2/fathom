@@ -50,7 +50,7 @@ A right-hand side takes the nodes chosen by the left-hand side and mutates them.
 
     type('smoo').props(someCallback).type('whee').score(2)
 
-Calls layer together like sheets of transparent acetate: if there are repeats, as with ``type`` in the previous example, the rightmost takes precedence and the left becomes useless. Similarly, if :func:`props`, which can return multiple properties of a fact (element, note, score, and type), is missing any of these properties, we continue searching to the left for anything that provides them (excepting other :func:props` calls—if you want that, write a combinator, and use it to combine the 2 functions you want)). To prevent this, return all properties explicitly from your props callback, even if they are no-ops (like ``{score: 1, note: undefined, type: undefined}``). Aside from this layering precedence, the order of calls does not matter.
+Calls layer together like sheets of transparent acetate: if there are repeats, as with ``type`` in the previous example, the rightmost takes precedence and the left becomes useless. Similarly, if :func:`props`, which can return multiple properties of a fact (element, note, score, and type), is missing any of these properties, we continue searching to the left for anything that provides them (excepting other :func:`props` calls—if you want that, write a combinator, and use it to combine the 2 functions you want)). To prevent this, return all properties explicitly from your props callback, even if they are no-ops (like ``{score: 1, note: undefined, type: undefined}``). Aside from this layering precedence, the order of calls does not matter.
 
 A good practice is to use more declarative calls—:func:`score`, :func:`note`, and :func:`type`—as much as possible and save :func:`props` for when you need it. The query planner can get more out of the more specialized calls without you having to tack on verbose hints like :func:`atMost` or :func:`typeIn`.
 
@@ -74,7 +74,7 @@ A good practice is to use more declarative calls—:func:`score`, :func:`note`, 
                    note: {suspicious: true}}];
       }
 
-   If you use ``props``, Fathom cannot look inside your callback to see what type you are emitting, so you must declare your output types with :func:`typeIn` or set a single static type with ``type``. Fathom will complain if you don't. (You can still opt not to return any type if the node turns out not to be a good match, even if you declare a :func:`typeIn`.
+   If you use ``props``, Fathom cannot look inside your callback to see what type you are emitting, so you must declare your output types with :func:`typeIn` or set a single static type with ``type``. Fathom will complain if you don't. (You can still opt not to return any type if the node turns out not to be a good match, even if you declare a :func:`typeIn`.)
 
 .. autofunction:: InwardRhs#note
    :short-name:
