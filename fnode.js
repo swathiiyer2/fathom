@@ -158,7 +158,7 @@ class Fnode {
      * computed for my element.
      */
     _computeType(theType) {
-        if (!this._types.has(theType)) {  // an unbenched optimization
+        if (!this._types.has(theType)) {  // Prevent infinite recursion when an A->A rule looks at A's note in a callback.
             this._ruleset.get(type(theType));
         }
     }

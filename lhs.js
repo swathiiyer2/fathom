@@ -1,7 +1,7 @@
 // The left-hand side of a rule
 
 const {clusters, distance} = require('./clusters');
-const {maxes, getDefault, max, setDefault, sum} = require('./utils');
+const {maxes, getDefault, max, NiceSet, setDefault, sum} = require('./utils');
 
 
 /**
@@ -42,14 +42,16 @@ class Lhs {
         }
     }
 
-    // Return an iterable of output fnodes selected by this left-hand-side
-    // expression.
-    //
-    // Pre: The rules I depend on have already been run, and their results are
-    // in ruleset.typeCache.
-    //
-    // ruleset: a BoundRuleset
-    // fnodes (ruleset)
+    /**
+     * Return an iterable of output fnodes selected by this left-hand-side
+     * expression.
+     *
+     * Pre: The rules I depend on have already been run, and their results are
+     * in ruleset.typeCache.
+     *
+     * @arg ruleset {BoundRuleset}
+     */
+    // fnodes (ruleset) {}
 
     /**
      * Check that a RHS-emitted fact is legal for this kind of LHS, and throw
@@ -66,13 +68,43 @@ class Lhs {
     }
 
     /**
-     * Return an iterable of rules that need to run in order to compute my
-     * inputs, undefined if we can't tell without also consulting the RHS or if
-     * the necessary prereqs are missing from the ruleset.
+     * Return the type I aggregate if I am an aggregate LHS; return undefined
+     * otherwise.
      */
-    prerequisites(ruleset) {
-        return undefined;
-    }
+    aggregatedType() {}
+
+    /**
+     * Return each combination of types my selected nodes could be locally (that
+     * is, by this rule only) constrained to have.
+     *
+     * For example, type(A) would return [A]. and(A, or(B, C)) would return
+     * [AB, AC, ABC]. More examples:
+     *
+     * or(A, B) → typeIn(A, B, C)  # Finalizes A, B.   combos A, B, AB: finalizes AB. Optimization: there's no point in returning the last combo in ors. Compilation into 2 rules with identical RHSs will inherently implement this optimization.
+     * or(A, B) → typeIn(A, B)  # Finalizes A, B
+     * or(A, B) → A  # Finalizes B
+     * and(A) -> A  # Finalizes nothing
+     * and(A, B) -> A  # Finalizes nothing.   AB: Ø
+     * and(A) -> typeIn(A, B)  # Finalizes A.   A
+     * and(A, B) -> typeIn(A, B)  # Finalizes nothing.   AB
+     * and(A, B) -> typeIn(A, B, C)  # Finalizes A, B.   AB
+     * and(A, or(B, C)) -> D  # Finalizes A, B, C.   AB, AC, ABC: ABC
+     * and(A, or(B, C)) -> B  # Finalizes A, C.   AB, AC, ABC: AC
+     * type(A).not(and(A, B)) ->
+     *
+     * @return {NiceSet[]}
+     */
+    // possibleTypeCombinations() {}
+
+    /**
+     * Types mentioned in this LHS.
+     *
+     * In other words, the types I need to know the assignment status of before
+     * I can make my selections
+     *
+     * @return NiceSet of strings
+     */
+    // typesMentioned() {}
 }
 
 class DomLhs extends Lhs {
@@ -104,8 +136,12 @@ class DomLhs extends Lhs {
         return this;
     }
 
-    prerequisites(ruleset) {
+    possibleTypeCombinations() {
         return [];
+    }
+
+    typesMentioned() {
+        return new NiceSet();
     }
 }
 
@@ -165,6 +201,14 @@ class TypeLhs extends Lhs {
     guaranteedType() {
         return this._type;
     }
+
+    possibleTypeCombinations() {
+        return [this.typesMentioned()];
+    }
+
+    typesMentioned() {
+        return new NiceSet([this._type]);
+    }
 }
 
 /**
@@ -175,8 +219,8 @@ class TypeLhs extends Lhs {
  * (nodes of that type).
  */
 class AggregateTypeLhs extends TypeLhs {
-    prerequisites(ruleset) {
-        return ruleset.inwardRulesThatCouldEmit(this._type);
+    aggregatedType() {
+        return this._type;
     }
 }
 
@@ -273,31 +317,12 @@ class AndLhs extends Lhs {
         }
     }
 
-    /**
-     * We require all rules that emit any of the types mentioned in my args.
-     */
-    prerequisites(ruleset) {
-        // TODO: Figure out what to do about and('A') -> type('A'). That's
-        // equivalent to A -> A, which depends on only adders, not emitters.
-        //
-        // and(A) -> A depends on adding A (changes no types)  ! emits A
-        // and(A, B) -> A depends on adding A, emitting B  # finalizes B, because it's converting it to an A. When we finalize something, we depend on emitting in (not merely adding it, because the score must be complete).  ! adds A
-        // and(A) -> typeIn(A, B) depends on anything emitting A (It's A->*, according to how our current Rule.prerequisites() code behaves.)  # finalizes A by converting it to B  ! adds B, emits A
-        // and(A, B) -> typeIn(A, B) depends on adding A or B (because it never changes the type of any fnode: they all already have A and B)  # finalizes nothing (same as "changes no types")  ! emits A and B
-        // and(A, B) -> typeIn(A, B, C) depends on anything emitting A or B (because it can change a fnode's type by adding C).  # finalizes A and B (cuz they could get converted to C)  ! adds C, emits A and B
-        //
-        // Now find a pattern to the above, and code it up.
-        // * [No] If RHS is a single type and that type appears on the LHS, depend on adding that type and emitting any other LHS types. (No: and(A, B) -> typeIn(A, B))
-        // * [No] Start by assuming all LHS types need Emitting. For each such type that appears on the RHS, change it to Adding. If there are any left over on RHS, everything changes back to Emitting. 
-        // * [Yes!] Depends on emitters of any LHS type we finalize (might change the type of). Depends on adders of any other LHS types. THIS IS A GENERAL RULE: works even for simple, non-and rules!
-        const prereqTypes = this._args.map(arg => arg.guaranteedType());
-        const prereqs = new Set();
-        for (let type of prereqTypes) {
-            for (let rule of ruleset.inwardRulesThatCouldEmit(type)) {
-                prereqs.add(rule);
-            }
-        }
-        return prereqs;
+    possibleTypeCombinations() {
+        return [this.typesMentioned()];
+    }
+
+    typesMentioned() {
+        return new NiceSet(this._args.map(arg => arg.guaranteedType()));
     }
 }
 

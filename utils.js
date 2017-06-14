@@ -296,6 +296,18 @@ class NiceSet extends Set {
     }
 
     /**
+     * Union another set or other iterable into myself.
+     *
+     * @return myself, for chaining
+     */
+    extend(otherSet) {
+        for (let item of otherSet) {
+            this.add(item);
+        }
+        return this;
+    }
+
+    /**
      * Actually show the items in me.
      */
     toString() {

@@ -278,10 +278,10 @@ describe('Rule', function () {
         const addRule = rule(type('b'), type('c'));
         const rules = ruleset(domRule, maxRule, maintainRule, addRule);
         const facts = rules.against(staticDom(''));
-        assert.deepEqual(domRule.prerequisites(facts), []);
-        assert.deepEqual(maxRule.prerequisites(facts), [domRule]);
-        assert.deepEqual(maintainRule.prerequisites(facts), [maxRule]);
-        assert.sameMembers(addRule.prerequisites(facts), [maxRule, maintainRule]);
+        assert.sameMembers(Array.from(domRule.prerequisites(facts)), []);
+        assert.sameMembers(Array.from(maxRule.prerequisites(facts)), [domRule]);
+        assert.sameMembers(Array.from(maintainRule.prerequisites(facts)), [maxRule]);
+        assert.sameMembers(Array.from(addRule.prerequisites(facts)), [maxRule, maintainRule]);
 
         const prereqs = facts._prerequisitesTo(addRule);
         // TODO: Replace with deepEqual when chai >= 4.0 supports Maps and Sets.

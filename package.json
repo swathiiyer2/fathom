@@ -10,7 +10,7 @@
     "wu": "^2.1.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^4.0.2",
     "coveralls": "^2.11.11",
     "eslint": "^3.7.1",
     "eslint-plugin-node": "^2.1.2",
