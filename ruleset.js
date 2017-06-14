@@ -2,7 +2,7 @@ const {forEach, map} = require('wu');
 
 const {CycleError} = require('./exceptions');
 const {Fnode} = require('./fnode');
-const {isDomElement, reversed, setDefault, toposort} = require('./utils');
+const {getDefault, isDomElement, NiceSet, reversed, setDefault, toposort} = require('./utils');
 const {out, OutwardRhs} = require('./rhs');
 
 
@@ -217,14 +217,14 @@ class BoundRuleset {
         return Array.from(fnodes);
     }
 
-    /** @return an Array of rules */
+    /** @return {Rule[]} */
     inwardRulesThatCouldEmit(type) {
-        return this._rulesThatCouldEmit.get(type);
+        return getDefault(this._rulesThatCouldEmit, type, () => []);
     }
 
-    /** @return an Array of rules */
+    /** @return {Rule[]} */
     inwardRulesThatCouldAdd(type) {
-        return this._rulesThatCouldAdd.get(type);
+        return getDefault(this._rulesThatCouldAdd, type, () => []);
     }
 
     /**
@@ -250,44 +250,85 @@ class Rule {  // abstract
     }
 
     /**
-     * Return an Array of the rules that this one depends on in the given
-     * ruleset. This may include rules that have already been executed in a
-     * BoundRuleset.
+     * Return a NiceSet of the rules that this one shallowly depends on in the
+     * given ruleset. In a BoundRuleset, this may include rules that have
+     * already been executed.
      *
-     * The rules are these, where A is a type:
+     * Depend on emitters of any LHS type this rule finalizes. (See
+     * _typesFinalized for a definition.) Depend on adders of any other LHS
+     * types (because, after all, we need to know what nodes have that type in
+     * order to find the set of LHS nodes). This works for simple rules and
+     * complex ones like and().
+     *
+     * Specific examples (where A is a type):
      * * A.max->* depends on anything emitting A.
+     * * Even A.max->A depends on A emitters, because we have to have all the
+     *   scores factored in first. For example, what if we did
+     *   max(A)->score(.5)?
      * * A->A depends on anything adding A.
-     * * A->* (including (A->out(…)) depends on anything emitting A. (For
+     * * A->(something other than A) depends on anything emitting A. (For
      *   example, we need the A score finalized before we could transfer it to
      *   B using conserveScore().)
+     * * A->out() also depends on anything emitting A. Fnode methods aren't
+     *   smart enough to lazily run emitter rules as needed. We could make them
+     *   so if it was shown to be an advantage.
      */
     prerequisites(ruleset) {
-        // Some LHSs know enough to determine their own prereqs:
-        const delegated = this.lhs.prerequisites(ruleset);
-        if (delegated !== undefined) {
-            // A.max->* or dom->*
-            return delegated;
+        // Optimization: we could cache the result of this when in a compiled (immutable) ruleset.
+        const prereqs = new NiceSet();
+
+        // Add finalized types:
+        for (let type of this._typesFinalized()) {
+            prereqs.extend(ruleset.inwardRulesThatCouldEmit(type));
         }
 
-        // Otherwise, fall back to a more expensive approach that takes into
-        // account both LHS and RHS types:
-        const possibleEmissions = this.typesItCouldEmit();
-        const leftType = this.lhs.guaranteedType();
-        if (possibleEmissions.size === 1 && possibleEmissions.has(leftType)) {
-            // A->A. All this could emit is its input type.
-            const adders = ruleset.inwardRulesThatCouldAdd(leftType);
-            if (adders === undefined) {
-                throw new Error(`No rule adds the "${leftType}" type, but another rule needs it as input.`);
-            }
-            return adders;
-        } else {
-            // A->*
-            const emitters = ruleset.inwardRulesThatCouldEmit(leftType);
-            if (emitters === undefined) {
-                throw new Error(`No rule emits the "${leftType}" type, but another rule needs it as input.`);
-            }
-            return emitters;
+        // Add mentioned types:
+        for (let type of this.lhs.typesMentioned()) {
+            // We could say this.lhs.typesMentioned().minus(typesFinalized) as
+            // an optimization. But since types mentioned are a superset of
+            // types finalized and rules adding are a subset of rules emitting,
+            // we get the same result without.
+            prereqs.extend(ruleset.inwardRulesThatCouldAdd(type));
         }
+
+        return prereqs;
+    }
+
+    /**
+     * Return the types that this rule finalizes.
+     *
+     * To "finalize" a type means to make sure we're finished running all
+     * possible rules that might change a node's score or notes w.r.t. a given
+     * type. This is generally done because we're about to use those data for
+     * something, like computing a new type's score or or an aggregate
+     * function. Exhaustively, we're about to...
+     * * change the type of the nodes or
+     * * aggregate all nodes of a type
+     *
+     * This base-class implementation just returns what aggregate functions
+     * need, since that need spans inward and outward rules.
+     *
+     * @return Set of types
+     */
+    _typesFinalized() {
+        // Get the types that are fed to aggregate functions. Aggregate
+        // functions are more demanding than a simple type() LHS. A type() LHS
+        // itself does not finalize its nodes because the things it could do to
+        // them without changing their type (adding notes, multiplying score)
+        // are immutable or commutative (respectively). Thus, we require a RHS
+        // type change in order to require finalization of a simple type()
+        // mention. A max(B), OTOH, is not commutative with other B->B rules
+        // (imagine type(B).max()->score(.5)), so it must depend on B emitters
+        // and thus finalize B. (This will have to be relaxed or rethought when
+        // we do the max()/atMost() optimization. Perhaps we can delegate to
+        // aggregate functions up in Rule.prerequisites() to ask what their
+        // prereqs are. If they implement such an optimization, they can reply.
+        // Otherwise, we can assume they are all the nodes of their type.)
+        //
+        // TODO: Could arbitrary predicates (once we implement those) matter
+        // too? Maybe it's not just aggregations.
+        const type = this.lhs.aggregatedType();
+        return (type === undefined) ? new NiceSet() : new NiceSet([type]);
     }
 }
 
@@ -401,6 +442,43 @@ class InwardRule extends Rule {
         ret.delete(this.lhs.guaranteedType());
         return ret;
     }
+
+    /**
+     * Add the types we could change to the superclass's result.
+     */
+    _typesFinalized() {
+        const self = this;
+        function typesThatCouldChange() {
+            const ret = new NiceSet();
+
+            // Get types that could change:
+            const emissions = self.rhs.possibleEmissions();
+            if (emissions.couldChangeType) {
+                // Get the possible guaranteed combinations of types on the LHS
+                // (taking just this LHS into account). For each combo, if the RHS
+                // adds a type that's not in the combo, the types in the combo get
+                // unioned into ret.
+                for (let combo of self.lhs.possibleTypeCombinations()) {
+                    for (let rhsType of emissions.possibleTypes) {
+                        if (!combo.has(rhsType)) {
+                            ret.extend(combo);
+                            break;
+                        }
+                    }
+                }
+            }
+            // Optimization: the possible combos could be later expanded to be
+            // informed by earlier rules which add the types mentioned in the LHS.
+            // If the only way for something to get B is to have Q first, then we
+            // can add Q to each combo and end up with fewer types finalized. Would
+            // this imply the existence of a Q->B->Q cycle and thus be impossible?
+            // Think about it. If we do this, we can centralize that logic here,
+            // rather than repeating it in all the Lhs subclasses).
+            return ret;
+        }
+
+        return typesThatCouldChange().extend(super._typesFinalized());
+    }
 }
 
 /**
@@ -428,10 +506,10 @@ class OutwardRule extends Rule {
     }
 
     /**
-     * @return an empty Set, since we don't emit anything back into the system
+     * OutwardRules finalize all types mentioned.
      */
-    typesItCouldEmit() {
-        return new Set();
+    _typesFinalized() {
+        return this.lhs.typesMentioned().extend(super._typesFinalized());
     }
 }
 
