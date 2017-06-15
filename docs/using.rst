@@ -7,7 +7,25 @@ Where It Works
 
 Fathom works against the DOM API, so you can use it server-side with ``jsdom`` (which the test harness uses) or another implementation, or you can embed it in a browser and pass it a native DOM. You can also pass in a subtree of a DOM.
 
-Kate Hudson has put together `a Firefox add-on that lets you see the results of Fathom 1.0 rulesets against the currently loaded page <https://github.com/k88hudson/ffmetadata>`_, as a new pane of the Developer Tools.
+To use it in a `node.js <https://nodejs.org/en/>`_ project, add ``fathom-web`` to your package.json file as a dependency:
+
+.. code-block:: js
+
+   ...
+   "dependencies": {
+      "fathom-web": "^2.1.0"
+   },
+   ...
+
+Run ``npm install`` to download any install Fathom, and then import the symbols you need:
+
+.. code-block:: js
+
+   const {rule, ruleset, dom, out, and, atMost, conserveScore, max, note, props, score, type, typeIn} = require('fathom-web');
+
+All the public symbols are in the top-level fathom-web package.
+
+Kate Hudson has put together `a Firefox add-on that lets you see the results of old Fathom 1.0 rulesets against the currently loaded page <https://github.com/k88hudson/ffmetadata>`_, as a new pane of the Developer Tools.
 
 Michael Comella `got Fathom 1.0 running on Android <https://github.com/mcomella/fathom-android-experiments>`_, returning results to Java via a WebView.
 
