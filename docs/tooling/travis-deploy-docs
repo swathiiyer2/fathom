@@ -8,7 +8,7 @@ npm install jsdoc
 virtualenv venv  # Global Python env is unwriteable.
 VIRTUAL_ENV="$CHECKOUT/venv"  # activate script doesn't work.
 PATH="$VIRTUAL_ENV/bin:$PATH"
-pip install 'Sphinx==1.5' 'sphinx-js>=2.0,<3.0' sphinx_rtd_theme
+pip install -r docs/tooling/doc-building-requirements.txt
 
 # Build docs:
 cd docs
