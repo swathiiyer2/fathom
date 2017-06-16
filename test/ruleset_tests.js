@@ -100,6 +100,29 @@ describe('Ruleset', function () {
         assert.equal(anchor.noteFor('anchor'), 'lovely');
     });
 
+    describe('complains about rules with missing input', function () {
+        it('emitters', function () {
+            const doc = staticDom('');
+            const rules = ruleset(
+                rule(type('c'), type('b'))
+            );
+            const facts = rules.against(doc);
+            assert.throws(() => facts.get(type('b')),
+                          'No rule emits the "c" type, but another rule needs it as input.');
+        });
+
+        it('adders', function () {
+            const doc = staticDom('');
+            const rules = ruleset(
+                rule(type('c'), score(2)),  // emits c but doesn't add it
+                rule(type('c'), type('b'))
+            );
+            const facts = rules.against(doc);
+            assert.throws(() => facts.get(type('b')),
+                          'No rule adds the "c" type, but another rule needs it as input.');
+        });
+    });
+
     describe('avoids cycles', function () {
         it('that should be statically detectable, throwing an error', function () {
             const doc = staticDom('<p></p>');

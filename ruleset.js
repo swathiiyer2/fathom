@@ -275,21 +275,32 @@ class Rule {  // abstract
      */
     prerequisites(ruleset) {
         // Optimization: we could cache the result of this when in a compiled (immutable) ruleset.
+
+        // Extend prereqs with rules derived from each of the give types. If no
+        // rules are found, raise an exception, as that indicates a malformed
+        // ruleset.
+        function extendOrThrow(prereqs, types, ruleGetter, verb) {
+            for (let type of types) {
+                const rules = ruleGetter(type);
+                if (rules.length > 0) {
+                    prereqs.extend(rules);
+                } else {
+                    throw new Error(`No rule ${verb} the "${type}" type, but another rule needs it as input.`);
+                }
+            }
+        }
+
         const prereqs = new NiceSet();
 
         // Add finalized types:
-        for (let type of this._typesFinalized()) {
-            prereqs.extend(ruleset.inwardRulesThatCouldEmit(type));
-        }
+        extendOrThrow(prereqs, this._typesFinalized(), type => ruleset.inwardRulesThatCouldEmit(type), 'emits');
 
         // Add mentioned types:
-        for (let type of this.lhs.typesMentioned()) {
-            // We could say this.lhs.typesMentioned().minus(typesFinalized) as
-            // an optimization. But since types mentioned are a superset of
-            // types finalized and rules adding are a subset of rules emitting,
-            // we get the same result without.
-            prereqs.extend(ruleset.inwardRulesThatCouldAdd(type));
-        }
+        // We could say this.lhs.typesMentioned().minus(typesFinalized) as an
+        // optimization. But since types mentioned are a superset of types
+        // finalized and rules adding are a subset of rules emitting, we get
+        // the same result without.
+        extendOrThrow(prereqs, this.lhs.typesMentioned(), type => ruleset.inwardRulesThatCouldAdd(type), 'adds');
 
         return prereqs;
     }
