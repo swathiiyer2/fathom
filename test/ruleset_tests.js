@@ -135,6 +135,20 @@ describe('Ruleset', function () {
             assert.throws(() => facts.get(type('a')),
                           'There is a cyclic dependency in the ruleset.');
         });
+
+        // This proves that the order of aggregate rules can't matter, because
+        // arrangements where it would matter are illegal due to cycles.
+        it('made of aggregates', function () {
+            const doc = staticDom('');
+            const rules = ruleset(
+                rule(dom('p'), type('a')),
+                rule(type('a').max(), score(2)),
+                rule(type('a').max(), score(.5))
+            );
+            const facts = rules.against(doc);
+            assert.throws(() => facts.get(type('a')),
+                          'There is a cyclic dependency in the ruleset.');
+        });
     });
 
     describe('conserves score', function () {
