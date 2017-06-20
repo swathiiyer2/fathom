@@ -38,7 +38,7 @@ class Lhs {
         } else if (firstCall.method === 'and') {
             return new AndLhs(firstCall.args);
         } else {
-            throw new Error('The left-hand side of a rule() must start with dom() or type().');
+            throw new Error('The left-hand side of a rule() must start with dom(), type(), or and().');
         }
     }
 
