@@ -30,7 +30,7 @@ function out(key) {
 class InwardRhs {
     constructor(calls = [], max = Infinity, types) {
         this._calls = calls.slice();
-        this._max = max;
+        this._max = max;  // max score
         this._types = new NiceSet(types);  // empty set if unconstrained
     }
 
@@ -48,7 +48,7 @@ class InwardRhs {
         return new this.constructor(this._calls, score, this._types);
     }
 
-    _checkScoreUpTo(fact) {
+    _checkAtMost(fact) {
         if (fact.score !== undefined && fact.score > this._max) {
             throw new Error(`Score of ${fact.score} exceeds the declared atMost(${this._max}).`);
         }
@@ -262,7 +262,7 @@ class InwardRhs {
                 }
             }
         }
-        this._checkScoreUpTo(result);
+        this._checkAtMost(result);
         this._checkTypeIn(result, leftType);
         return result;
     }
