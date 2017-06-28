@@ -41,6 +41,8 @@ function numStrides(left, right) {
 /**
  * Return a distance measurement between 2 DOM nodes or :term:`fnodes<fnode>`.
  *
+ * Return ``Number.MAX_VALUE`` if one of the nodes contains the other.
+ *
  * This is largely an implementation detail of :func:`clusters`, but you can
  * call it yourself if you wish to implement your own clustering. Takes O(n log
  * n) time.
@@ -57,6 +59,8 @@ function numStrides(left, right) {
  * @arg sameTagCost {number} Cost for a level below the common ancestor where
  *    tagNames are the same
  * @arg strideCost {number} Cost for each stride node between A and B
+ * @arg additionalCost {function} Return an additional cost, given 2 fnodes or
+ *    nodes.
  *
  */
 function distance(fnodeA,
@@ -64,7 +68,8 @@ function distance(fnodeA,
                   {differentDepthCost = 2,
                    differentTagCost = 2,
                    sameTagCost = 1,
-                   strideCost = 1} = {}) {
+                   strideCost = 1,
+                   additionalCost = (fnodeA, fnodeB) => 0} = {}) {
     // I was thinking of something that adds little cost for siblings. Up
     // should probably be more expensive than down (see middle example in the
     // Nokia paper).
@@ -144,7 +149,7 @@ function distance(fnodeA,
         }
     }
 
-    return cost;
+    return cost + additionalCost(fnodeA, fnodeB);
 }
 
 /** A lower-triangular matrix of inter-cluster distances */

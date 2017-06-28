@@ -203,6 +203,21 @@ describe('Cluster tests', function () {
                                   doc.getElementById('a')),
                          Number.MAX_VALUE);
         });
+
+        it('adds in the results of additionalCost functions', function () {
+            const doc = staticDom(`
+                <body>
+                    <div id="a">
+                    </div>
+                    <div id="b">
+                    </div>
+                </body>
+            `);
+            assert.equal(distance(doc.getElementById('a'),
+                                  doc.getElementById('b'),
+                                  {additionalCost: (a, b) => 7}),
+                         9);
+        });
     });
 
     describe('clusters()', function () {
