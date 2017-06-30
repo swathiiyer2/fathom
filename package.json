@@ -7,17 +7,29 @@
     "url": "https://github.com/mozilla/fathom/issues"
   },
   "dependencies": {
+    "fathom-web": "^2.1.0",
+    "file-url": "^2.0.2",
+    "phantom": "^4.0.4",
     "wu": "^2.1.0"
   },
   "devDependencies": {
+    "browserify": "^14.4.0",
     "chai": "^4.0.2",
     "coveralls": "^2.11.11",
     "eslint": "^3.7.1",
     "eslint-plugin-node": "^2.1.2",
     "istanbul": "^0.4.5",
+    "jasmine-core": "^2.6.4",
     "jsdom": "^8.5.0",
+    "karma": "^1.7.0",
+    "karma-browserify": "^5.1.1",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-jasmine": "^1.1.0",
+    "karma-mocha": "^1.3.0",
     "leven": "^2.1.0",
-    "mocha": "^3.2.0"
+    "mocha": "^3.4.2",
+    "watchify": "^3.9.0"
   },
   "engines": {
     "node": ">= 6.0.0"
@@ -37,7 +49,7 @@
   "scripts": {
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "lint": "make lint",
-    "pretest": "npm run lint",
-    "test": "istanbul cover _mocha"
+    "pretestf": "npm run lint",
+    "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js"
   }
 }
