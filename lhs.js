@@ -129,12 +129,12 @@ class DomLhs extends Lhs {
         const matches = ruleset.doc.querySelectorAll(this.selector);
         const ret = [];
         for (let i = 0; i < matches.length; i++) {  // matches is a NodeList, which doesn't conform to iterator protocol
-            const element = matches[i];
+            const fnode = ruleset.fnodeForElement(matches[i]);
             const result = this.predicates.every(function(func){
-                return func(element);
+                return func(fnode);
             });
             if(result){
-              ret.push(ruleset.fnodeForElement(element));
+              ret.push(fnode);
             }
         }
         return ret;
