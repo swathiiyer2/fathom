@@ -30,6 +30,10 @@ function dom(selector) {
  * Lhs and its subclasses are private to the Fathom framework.
  */
 class Lhs {
+    constructor(){
+      this.predicates = [];
+    }
+
     /** Return a new Lhs of the appropriate kind, given its first call. */
     static fromFirstCall(firstCall) {
         // firstCall is never 'dom', because dom() directly returns a DomLhs.
@@ -40,6 +44,11 @@ class Lhs {
         } else {
             throw new Error('The left-hand side of a rule() must start with dom(), type(), or and().');
         }
+    }
+
+    when(pred){
+      this.predicates.push(pred);
+      return this;
     }
 
     /**
@@ -121,7 +130,12 @@ class DomLhs extends Lhs {
         const ret = [];
         for (let i = 0; i < matches.length; i++) {  // matches is a NodeList, which doesn't conform to iterator protocol
             const element = matches[i];
-            ret.push(ruleset.fnodeForElement(element));
+            const result = this.predicates.every(function(func){
+                return func(element);
+            });
+            if(result){
+              ret.push(ruleset.fnodeForElement(element));
+            }
         }
         return ret;
     }
