@@ -20,17 +20,17 @@ function dom(selector) {
  * the fnodes that satisfy all the predicates imposed by calls to
  * when()
  */
-function checkPredicates(predicates, fnodes){
-  const ret = [];
-  fnodes.forEach(function(item){
-    const result = predicates.every(function(func){
-      return func(item);
+function checkPredicates(predicates, fnodes) {
+    const ret = [];
+    fnodes.forEach (function (item) {
+        const result = predicates.every (function (func) {
+            return func(item);
+        });
+        if (result) {
+            ret.push(item);
+        }
     });
-    if(result){
-      ret.push(item);
-    }
-  });
-  return ret;
+    return ret;
 }
 
 /**
@@ -49,7 +49,7 @@ function checkPredicates(predicates, fnodes){
  */
 class Lhs {
     constructor() {
-      this.predicates = [];
+        this.predicates = [];
     }
 
     /** Return a new Lhs of the appropriate kind, given its first call. */
@@ -65,8 +65,8 @@ class Lhs {
     }
 
     when(pred) {
-      this.predicates.push(pred);
-      return this;
+        this.predicates.push(pred);
+        return this;
     }
 
     /**
@@ -145,8 +145,8 @@ class DomLhs extends Lhs {
 
     fnodes(ruleset) {
         const matches = ruleset.doc.querySelectorAll(this.selector);
-        const fnodes = Array.from(matches).map(function(obj){
-          return ruleset.fnodeForElement(obj);
+        const fnodes = Array.from(matches).map(function (obj) {
+            return ruleset.fnodeForElement(obj);
         });
         const predicates = this.predicates;
         return checkPredicates(predicates, fnodes);

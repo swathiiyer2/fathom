@@ -117,7 +117,7 @@ class Side {
     }
 
     when(pred) {
-      return this._and('when', pred);
+        return this._and('when', pred);
     }
 }
 
