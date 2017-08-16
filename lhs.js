@@ -15,6 +15,24 @@ function dom(selector) {
     return new DomLhs(selector);
 }
 
+/*
+ * Of all the dom nodes selected by type() or dom(), return only
+ * the fnodes that satisfy all the predicates imposed by calls to
+ * when()
+ */
+function checkPredicates(predicates, fnodes){
+  const ret = [];
+  fnodes.forEach(function(item){
+    const result = predicates.every(function(func){
+      return func(item);
+    });
+    if(result){
+      ret.push(item);
+    }
+  });
+  return ret;
+}
+
 /**
  * Rules and the LHSs and RHSs that comprise them have no mutable state. This
  * lets us make BoundRulesets from Rulesets without duplicating the rules. It
@@ -30,7 +48,7 @@ function dom(selector) {
  * Lhs and its subclasses are private to the Fathom framework.
  */
 class Lhs {
-    constructor(){
+    constructor() {
       this.predicates = [];
     }
 
@@ -46,7 +64,7 @@ class Lhs {
         }
     }
 
-    when(pred){
+    when(pred) {
       this.predicates.push(pred);
       return this;
     }
@@ -127,17 +145,11 @@ class DomLhs extends Lhs {
 
     fnodes(ruleset) {
         const matches = ruleset.doc.querySelectorAll(this.selector);
-        const ret = [];
-        for (let i = 0; i < matches.length; i++) {  // matches is a NodeList, which doesn't conform to iterator protocol
-            const fnode = ruleset.fnodeForElement(matches[i]);
-            const result = this.predicates.every(function(func){
-                return func(fnode);
-            });
-            if(result){
-              ret.push(fnode);
-            }
-        }
-        return ret;
+        const fnodes = Array.from(matches).map(function(obj){
+          return ruleset.fnodeForElement(obj);
+        });
+        const predicates = this.predicates;
+        return checkPredicates(predicates, fnodes);
     }
 
     checkFact(fact) {
@@ -170,7 +182,9 @@ class TypeLhs extends Lhs {
     }
 
     fnodes(ruleset) {
-        return getDefault(ruleset.typeCache, this._type, () => []);
+        const cached = getDefault(ruleset.typeCache, this._type, () => []);
+        const predicates = this.predicates;
+        return checkPredicates(predicates, cached);
     }
 
     /** Override the type previously specified by this constraint. */
