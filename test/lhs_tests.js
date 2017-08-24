@@ -51,4 +51,28 @@ describe('LHS', function () {
         const best = facts.get('best');
         assert.equal(best.length, 1);
     });
+
+    it('testing when() on type()', function () {
+        const doc = staticDom('<p id="fat"><p id="fat"></p></p>');
+        const rules = ruleset(
+            rule(dom('p'), type('bar')),
+            rule(type('bar').when(fnode => fnode.element.id === 'fat'), type('when').score(5)),
+            rule(type('when').max(), out('best'))
+        );
+        const facts = rules.against(doc);
+        const best = facts.get('best');
+        assert.equal(best.length, 2);
+    });
+
+    it('testing when() on dom()', function () {
+        const doc = staticDom('<p id="bat"></p><p></p><p id="fat"></p><p id="bat"></p>');
+        const rules = ruleset(
+            rule(dom('p').when(fnode => fnode.element.id === 'bat'), type('when').score(5)),
+            rule(type('when').max(), out('best'))
+        );
+        const facts = rules.against(doc);
+        const best = facts.get('best');
+        assert.equal(best.length, 2);
+    });
+
 });

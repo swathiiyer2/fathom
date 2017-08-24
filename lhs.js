@@ -15,23 +15,6 @@ function dom(selector) {
     return new DomLhs(selector);
 }
 
-/*
- * Of all the dom nodes selected by type() or dom(), return only
- * the fnodes that satisfy all the predicates imposed by calls to
- * when()
- */
-function checkPredicates(predicates, fnodes) {
-    const ret = [];
-    fnodes.forEach (function (item) {
-        const result = predicates.every (function (func) {
-            return func(item);
-        });
-        if (result) {
-            ret.push(item);
-        }
-    });
-    return ret;
-}
 
 /**
  * Rules and the LHSs and RHSs that comprise them have no mutable state. This
@@ -49,7 +32,7 @@ function checkPredicates(predicates, fnodes) {
  */
 class Lhs {
     constructor() {
-        this.predicates = [];
+        this._predicates = [];
     }
 
     /** Return a new Lhs of the appropriate kind, given its first call. */
@@ -65,8 +48,25 @@ class Lhs {
     }
 
     when(pred) {
-        this.predicates.push(pred);
+        this._predicates.push(pred);
         return this;
+    }
+
+    /*
+     * Of all the dom nodes selected by type() or dom(), return only
+     * the fnodes that satisfy all the predicates imposed by calls to
+     * when()
+     */
+    fnodesSatisfyingWhens(fnodes) {
+        const ret = [];
+        const predicates = this._predicates;
+        fnodes.forEach(function (fnode) {
+            const matchesPredicates = predicates.every(pred => pred(fnode));
+            if (matchesPredicates) {
+                ret.push(fnode);
+            }
+        });
+        return ret;
     }
 
     /**
@@ -144,12 +144,10 @@ class DomLhs extends Lhs {
     }
 
     fnodes(ruleset) {
+        const ret = [];
         const matches = ruleset.doc.querySelectorAll(this.selector);
-        const fnodes = Array.from(matches).map(function (obj) {
-            return ruleset.fnodeForElement(obj);
-        });
-        const predicates = this.predicates;
-        return checkPredicates(predicates, fnodes);
+        Array.from(matches).forEach(element => ret.push(ruleset.fnodeForElement(element)));
+        return super.fnodesSatisfyingWhens(ret);
     }
 
     checkFact(fact) {
@@ -183,8 +181,7 @@ class TypeLhs extends Lhs {
 
     fnodes(ruleset) {
         const cached = getDefault(ruleset.typeCache, this._type, () => []);
-        const predicates = this.predicates;
-        return checkPredicates(predicates, cached);
+        return super.fnodesSatisfyingWhens(cached);
     }
 
     /** Override the type previously specified by this constraint. */
