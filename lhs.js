@@ -32,7 +32,7 @@ function dom(selector) {
  */
 class Lhs {
     constructor() {
-        this._predicate = function (fnode) {return true;};
+        this._predicate = () => true;
     }
 
     /** Return a new Lhs of the appropriate kind, given its first call. */
@@ -48,10 +48,7 @@ class Lhs {
     }
 
     when(pred) {
-        const selector = this._type !== undefined? this._type : this.selector;
-        let lhs = new this.constructor(selector);
-        lhs._predicate = pred;
-        return lhs;
+        return this.clone(pred);
     }
 
     /*
@@ -144,10 +141,16 @@ class DomLhs extends Lhs {
         this.selector = selector;
     }
 
+    clone(pred) {
+        let lhs = new this.constructor(this.selector);
+        lhs._predicate = pred;
+        return lhs;
+    }
+
     fnodes(ruleset) {
         const ret = [];
         const matches = ruleset.doc.querySelectorAll(this.selector);
-        for(let i = 0; i < matches.length; i++) {
+        for (let i = 0; i < matches.length; i++) {
             ret.push(ruleset.fnodeForElement(matches[i]));
         }
         return super.fnodesSatisfyingWhen(ret);
@@ -180,6 +183,12 @@ class TypeLhs extends Lhs {
             throw new Error('A type name is required when calling type().');
         }
         this._type = type;  // the input type
+    }
+
+    clone(pred) {
+        let lhs = new this.constructor(this._type);
+        lhs._predicate = pred;
+        return lhs;
     }
 
     fnodes(ruleset) {
