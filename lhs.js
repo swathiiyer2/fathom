@@ -48,8 +48,10 @@ class Lhs {
     }
 
     when(pred) {
-        this._predicate = pred;
-        return this;
+        const selector = this._type !== undefined? this._type : this.selector;
+        let lhs = new this.constructor(selector);
+        lhs._predicate = pred;
+        return lhs;
     }
 
     /*
