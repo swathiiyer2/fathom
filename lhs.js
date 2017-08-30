@@ -32,7 +32,7 @@ function dom(selector) {
  */
 class Lhs {
     constructor() {
-        this._predicate = function(fnode){return true;};
+        this._predicate = function (fnode) {return true;};
     }
 
     /** Return a new Lhs of the appropriate kind, given its first call. */
@@ -148,7 +148,7 @@ class DomLhs extends Lhs {
         const ret = [];
         const matches = ruleset.doc.querySelectorAll(this.selector);
         for(let i = 0; i < matches.length; i++) {
-          ret.push(ruleset.fnodeForElement(matches[i]));
+            ret.push(ruleset.fnodeForElement(matches[i]));
         }
         return super.fnodesSatisfyingWhen(ret);
     }
