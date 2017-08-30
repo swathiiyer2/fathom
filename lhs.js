@@ -145,7 +145,9 @@ class DomLhs extends Lhs {
     fnodes(ruleset) {
         const ret = [];
         const matches = ruleset.doc.querySelectorAll(this.selector);
-        Array.from(matches).forEach(element => ret.push(ruleset.fnodeForElement(element)));
+        for(let i = 0; i < matches.length; i++) {
+          ret.push(ruleset.fnodeForElement(matches[i]));
+        }
         return super.fnodesSatisfyingWhen(ret);
     }
 
