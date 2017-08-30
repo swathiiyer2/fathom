@@ -32,7 +32,7 @@ function dom(selector) {
  */
 class Lhs {
     constructor() {
-        this._predicates = [];
+        this._predicate = function(fnode){return true;};
     }
 
     /** Return a new Lhs of the appropriate kind, given its first call. */
@@ -48,7 +48,7 @@ class Lhs {
     }
 
     when(pred) {
-        this._predicates.push(pred);
+        this._predicate = pred;
         return this;
     }
 
@@ -57,12 +57,11 @@ class Lhs {
      * the fnodes that satisfy all the predicates imposed by calls to
      * when()
      */
-    fnodesSatisfyingWhens(fnodes) {
+    fnodesSatisfyingWhen(fnodes) {
         const ret = [];
-        const predicates = this._predicates;
+        const pred = this._predicate;
         fnodes.forEach(function (fnode) {
-            const matchesPredicates = predicates.every(pred => pred(fnode));
-            if (matchesPredicates) {
+            if (pred(fnode)) {
                 ret.push(fnode);
             }
         });
@@ -147,7 +146,7 @@ class DomLhs extends Lhs {
         const ret = [];
         const matches = ruleset.doc.querySelectorAll(this.selector);
         Array.from(matches).forEach(element => ret.push(ruleset.fnodeForElement(element)));
-        return super.fnodesSatisfyingWhens(ret);
+        return super.fnodesSatisfyingWhen(ret);
     }
 
     checkFact(fact) {
@@ -181,7 +180,7 @@ class TypeLhs extends Lhs {
 
     fnodes(ruleset) {
         const cached = getDefault(ruleset.typeCache, this._type, () => []);
-        return super.fnodesSatisfyingWhens(cached);
+        return super.fnodesSatisfyingWhen(cached);
     }
 
     /** Override the type previously specified by this constraint. */

@@ -52,7 +52,7 @@ describe('LHS', function () {
         assert.equal(best.length, 1);
     });
 
-    it('testing when() on type()', function () {
+    it.only('testing when() on type()', function () {
         const doc = staticDom('<p id="fat"><p id="fat"></p></p>');
         const rules = ruleset(
             rule(dom('p'), type('bar')),
@@ -64,7 +64,7 @@ describe('LHS', function () {
         assert.equal(best.length, 2);
     });
 
-    it('testing when() on dom()', function () {
+    it.only('testing when() on dom()', function () {
         const doc = staticDom('<p id="bat"></p><p></p><p id="fat"></p><p id="bat"></p>');
         const rules = ruleset(
             rule(dom('p').when(fnode => fnode.element.id === 'bat'), type('when').score(5)),
