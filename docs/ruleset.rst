@@ -45,11 +45,6 @@ Left-hand sides are currently a few special forms which select nodes to be fed t
 
 .. function :: when(predicate)
 
-    Further specify types of node you'd like to select. Can be chained with type() or dom().
-
-    Example: dom('p').when(fnode => fnode.element.id === 'foo')
-    
-    Takes a function that accepts an fnode and returns a boolean.
 
 Right-hand Sides
 ----------------

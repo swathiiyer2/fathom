@@ -47,6 +47,11 @@ class Lhs {
         }
     }
 
+    /*
+     *  Further specify type of node you'd like to select. Can be chained with :func:`type` or :func:`dom`.
+     *  Example usage: ``dom('p').when(fnode => fnode.element.id === 'foo')``
+     *  @param {function} function accepts an fnode and returns a boolean.
+     */
     when(pred) {
         let lhs = this.clone();
         lhs._predicate = pred;
