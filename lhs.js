@@ -64,14 +64,7 @@ class Lhs {
      * when()
      */
     fnodesSatisfyingWhen(fnodes) {
-        const ret = [];
-        const pred = this._predicate;
-        fnodes.forEach(function (fnode) {
-            if (pred(fnode)) {
-                ret.push(fnode);
-            }
-        });
-        return ret;
+        return Array.from(fnodes).filter(this._predicate);
     }
 
     /**
