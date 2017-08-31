@@ -391,6 +391,15 @@ function isDomElement(thing) {
     return thing.nodeName !== undefined;
 }
 
+function searchAttributes(fnode, searchFunction, ...attrs){
+  for(let i = 0; i < attrs.length; i++){
+    if(searchFunction(fnode.element.getAtrribute(attrs[i]))){
+      return true;
+    }
+  }
+  return false;
+}
+
 // -------- Methods below are private to Fathom. --------
 
 /**
