@@ -39,7 +39,7 @@ describe('Utils', function () {
     });
 
     describe('searchAttributes', function () {
-        it.only('search with no args', function () {
+        it('search with no args', function () {
             const doc = staticDom(`
                 <img id= "foo" alt= "boo"></img><img id="fat" src= "bat"></img>
             `);
@@ -62,7 +62,7 @@ describe('Utils', function () {
             assert.equal(best[0].element.id, 'foo');
         });
 
-        it.only('search with args', function () {
+        it('search with args', function () {
             const doc = staticDom(`
                 <img id= "foo" alt= "bat"></img><img id="sat" src= "bat"></img>
             `);
@@ -83,6 +83,29 @@ describe('Utils', function () {
             const best = facts.get('best');
             assert.equal(best.length, 1);
             assert.equal(best[0].element.id, 'sat');
+        });
+
+        it('search array attribute', function () {
+            const doc = staticDom(`
+                <img id = "fat" class="fat bat sat" ></img><img id ="foo" class="foo bar boo"></img>
+            `);
+            const rules = ruleset(
+                rule(dom('img'), type('attr')),
+                rule(type('attr'), score(scoreFunc)),
+                rule(type('attr').max(), out('best'))
+            );
+
+            function scoreFunc(fnode) {
+                return searchAttributes(fnode, searchFunc)? 5 : 1;
+            }
+
+            function searchFunc(attr) {
+                return attr.includes('at');
+            }
+            const facts = rules.against(doc);
+            const best = facts.get('best');
+            assert.equal(best.length, 1);
+            assert.equal(best[0].element.id, 'fat');
         });
 
     });
