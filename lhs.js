@@ -48,7 +48,9 @@ class Lhs {
     }
 
     when(pred) {
-        return this.clone(pred);
+        let lhs = this.clone();
+        lhs._predicate = pred;
+        return lhs;
     }
 
     /*
@@ -141,10 +143,8 @@ class DomLhs extends Lhs {
         this.selector = selector;
     }
 
-    clone(pred) {
-        let lhs = new this.constructor(this.selector);
-        lhs._predicate = pred;
-        return lhs;
+    clone() {
+        return new this.constructor(this.selector);
     }
 
     fnodes(ruleset) {
@@ -185,10 +185,8 @@ class TypeLhs extends Lhs {
         this._type = type;  // the input type
     }
 
-    clone(pred) {
-        let lhs = new this.constructor(this._type);
-        lhs._predicate = pred;
-        return lhs;
+    clone() {
+        return new this.constructor(this._type);
     }
 
     fnodes(ruleset) {
