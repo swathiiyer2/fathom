@@ -49,12 +49,12 @@ describe('Utils', function () {
                 rule(type('attr').max(), out('best'))
             );
 
-            function scoreFunc(fnode){
-              return searchAttributes(fnode, searchFunc)? 5 : 1;
+            function scoreFunc(fnode) {
+                return searchAttributes(fnode, searchFunc)? 5 : 1;
             }
 
-            function searchFunc(attr){
-              return attr.includes("oo");
+            function searchFunc(attr) {
+                return attr.includes('oo');
             }
             const facts = rules.against(doc);
             const best = facts.get('best');
@@ -72,12 +72,12 @@ describe('Utils', function () {
                 rule(type('attr').max(), out('best'))
             );
 
-            function scoreFunc(fnode){
-              return searchAttributes(fnode, searchFunc, 'id')? 5 : 1;
+            function scoreFunc(fnode) {
+                return searchAttributes(fnode, searchFunc, 'id')? 5 : 1;
             }
 
-            function searchFunc(attr){
-              return attr.includes("at");
+            function searchFunc(attr) {
+                return attr.includes('at');
             }
             const facts = rules.against(doc);
             const best = facts.get('best');
