@@ -392,26 +392,26 @@ function isDomElement(thing) {
 }
 
 /**
- * Checks whether any of the elements attributes satisfy some function.
+ * Checks whether any of the element's attributes satisfy some function.
  * Default is to check all attributes, unless specific attributes are specified.
  * If an attribute has an array of values (e.g. class attribute), will apply
  * the searchFunction to each one.
  * @arg fnode {object} fnode whose attributes you want to search
  * @arg searchFunction {function} function to apply to each attribute
- * @arg attrs {string} the attributes you want to search. If none provided, default is to search all. 
+ * @arg attrs {string} the attributes you want to search. If none provided, default is to search all.
  * @return true if any of the attributes satisfy some condition
  */
-function searchAttributes(fnode, searchFunction, ...attrs){
-  // if attrs argument not provided, default is to search all attributes
-  const attributes = attrs.length === 0? fnode.element.attributes : attrs;
-  for (let i = 0; i < attributes.length; i++) {
-      const attr = fnode.element.getAtrribute(attributes[i]);
-      // If the attribute is an array, apply the scoring function to each element
-      if (attr && ((attr.isArray && attr.some(searchFunction)) || searchFunction(attr))) {
-          return true;
-      }
-  }
-  return false;
+function searchAttributes(fnode, searchFunction, ...attrs) {
+    // if attrs argument not provided, default is to search all attributes
+    const attributes = attrs.length === 0? fnode.element.attributes : attrs;
+    for (let i = 0; i < attributes.length; i++) {
+        const attr = fnode.element.getAtrribute(attributes[i]);
+        // If the attribute is an array, apply the scoring function to each element
+        if (attr && ((attr.isArray && attr.some(searchFunction)) || searchFunction(attr))) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // -------- Methods below are private to Fathom. --------
