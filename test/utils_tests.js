@@ -1,6 +1,6 @@
 const {assert} = require('chai');
-
-const {NiceSet, toposort} = require('../utils');
+const {dom, out, rule, ruleset, score, type} = require('../index');
+const {NiceSet, toposort, staticDom, searchAttributes} = require('../utils');
 
 
 describe('Utils', function () {
@@ -36,5 +36,54 @@ describe('Utils', function () {
             assert.throws(() => toposort([0, 1, 2], nodesThatNeed),
                           'The graph has a cycle.');
         });
+    });
+
+    describe('searchAttributes', function () {
+        it.only('search with no args', function () {
+            const doc = staticDom(`
+                <img id= "foo" alt= "boo"></img><img id="fat" src= "bat"></img>
+            `);
+            const rules = ruleset(
+                rule(dom('img'), type('attr')),
+                rule(type('attr'), score(scoreFunc)),
+                rule(type('attr').max(), out('best'))
+            );
+
+            function scoreFunc(fnode){
+              return searchAttributes(fnode, searchFunc)? 5 : 1;
+            }
+
+            function searchFunc(attr){
+              return attr.includes("oo");
+            }
+            const facts = rules.against(doc);
+            const best = facts.get('best');
+            assert.equal(best.length, 1);
+            assert.equal(best[0].element.id, 'foo');
+        });
+
+        it.only('search with args', function () {
+            const doc = staticDom(`
+                <img id= "foo" alt= "bat"></img><img id="sat" src= "bat"></img>
+            `);
+            const rules = ruleset(
+                rule(dom('img'), type('attr')),
+                rule(type('attr'), score(scoreFunc)),
+                rule(type('attr').max(), out('best'))
+            );
+
+            function scoreFunc(fnode){
+              return searchAttributes(fnode, searchFunc, 'id')? 5 : 1;
+            }
+
+            function searchFunc(attr){
+              return attr.includes("at");
+            }
+            const facts = rules.against(doc);
+            const best = facts.get('best');
+            assert.equal(best.length, 1);
+            assert.equal(best[0].element.id, 'sat');
+        });
+
     });
 });

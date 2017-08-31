@@ -403,9 +403,9 @@ function isDomElement(thing) {
  */
 function searchAttributes(fnode, searchFunction, ...attrs) {
     // if attrs argument not provided, default is to search all attributes
-    const attributes = attrs.length === 0? fnode.element.attributes : attrs;
+    const attributes = attrs.length === 0? Array.from(fnode.element.attributes).map(a => a.name) : attrs;
     for (let i = 0; i < attributes.length; i++) {
-        const attr = fnode.element.getAtrribute(attributes[i]);
+        const attr = fnode.element.getAttribute(attributes[i]);
         // If the attribute is an array, apply the scoring function to each element
         if (attr && ((attr.isArray && attr.some(searchFunction)) || searchFunction(attr))) {
             return true;
@@ -447,6 +447,7 @@ module.exports = {
     page,
     reversed,
     rootElement,
+    searchAttributes,
     setDefault,
     staticDom,
     sum,
