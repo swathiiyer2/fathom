@@ -41,7 +41,7 @@ describe('Utils', function () {
     describe('searchAttributes', function () {
         it('search with no args', function () {
             const doc = staticDom(`
-                <img id= "foo" alt= "boo"></img><img id="fat" src= "bat"></img>
+                <img id="foo" alt="boo"></img><img id="fat" src= "bat"></img>
             `);
             const rules = ruleset(
                 rule(dom('img'), type('attr')),
@@ -64,7 +64,7 @@ describe('Utils', function () {
 
         it('search with args', function () {
             const doc = staticDom(`
-                <img id= "foo" alt= "bat"></img><img id="sat" src= "bat"></img>
+                <img id="foo" alt="bat"></img><img id="sat" src="bat"></img>
             `);
             const rules = ruleset(
                 rule(dom('img'), type('attr')),
@@ -87,7 +87,7 @@ describe('Utils', function () {
 
         it('search array attribute', function () {
             const doc = staticDom(`
-                <img id = "fat" class="fat bat sat" ></img><img id ="foo" class="foo bar boo"></img>
+                <img id="fat" class="fat bat sat" ></img><img id ="foo" class="foo bar boo"></img>
             `);
             const rules = ruleset(
                 rule(dom('img'), type('attr')),
@@ -110,7 +110,7 @@ describe('Utils', function () {
 
         it('test non-attribute', function () {
             const doc = staticDom(`
-                <img id = "foo" alt = "bat"></img><img id ="bar"></img>
+                <img id="foo" alt="bat"></img><img id="bar"></img>
             `);
             const rules = ruleset(
                 rule(dom('img'), type('attr')),
@@ -133,7 +133,7 @@ describe('Utils', function () {
 
         it('test negative', function () {
             const doc = staticDom(`
-                <img id = "foo"></img><img id ="bar"></img>
+                <img id="foo"></img><img id="bar"></img>
             `);
             const rules = ruleset(
                 rule(dom('img'), type('attr')),
@@ -155,7 +155,7 @@ describe('Utils', function () {
 
         it('test multiple', function () {
             const doc = staticDom(`
-                <img id = "foo"></img><img id ="boo"></img>
+                <img id="foo"></img><img id="boo"></img>
             `);
             const rules = ruleset(
                 rule(dom('img'), type('attr')),
