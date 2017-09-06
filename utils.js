@@ -392,14 +392,15 @@ function isDomElement(thing) {
 }
 
 /**
- * Checks whether any of the element's attributes satisfy some function.
- * Default is to check all attributes, unless specific attributes are specified.
- * If an attribute has an array of values (e.g. class attribute), will apply
- * the searchFunction to each one.
- * @arg fnode {object} fnode whose attributes you want to search
- * @arg searchFunction {function} function to apply to each attribute
- * @arg attrs {string} the attributes you want to search. If none provided, default is to search all.
- * @return true if any of the attributes satisfy some condition
+ * Checks whether any of the element's attributes satisfy some condition.
+ *
+ * Example usage: ``searchAttributes(fnode, attr => attr.includes('at'), 'id', 'alt')``
+ * @arg fnode {object} Fnode whose attributes you want to search
+ * @arg searchFunction {function} Function that specifies a condition to check. Takes a string and returns a boolean.
+ * If an attribute has an array of values (e.g. class attribute), searchAttributes
+ * will apply searchFunction to each one.
+ * @arg attrs {string} A list of attributes you want to search. If none provided, default is to search all.
+ * @return Returns true if any of the attributes satisfy the search function
  */
 function searchAttributes(fnode, searchFunction, ...attrs) {
     // if attrs argument not provided, default is to search all attributes

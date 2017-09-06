@@ -32,6 +32,7 @@ Import them from ``fathom-web/utils``. For example...
 .. autofunction:: page
 .. autofunction:: reversed
 .. autofunction:: rootElement
+.. autofunction:: searchAttributes
 .. autofunction:: setDefault
 .. autofunction:: sum
 .. autofunction:: toposort
