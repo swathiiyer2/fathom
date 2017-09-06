@@ -109,6 +109,7 @@ describe('Utils', function () {
         });
 
         it('test non-attribute', function () {
+            // The first element has the alt attribute, and the second one doesn't, so it shouldn't get included in the results
             const doc = staticDom(`
                 <img id="foo" alt="bat"></img><img id="bar"></img>
             `);
