@@ -398,7 +398,7 @@ function isDomElement(thing) {
  * @arg fnode {object} Fnode whose attributes you want to search
  * @arg searchFunction {function} Function that specifies a condition to check. Takes a string and returns a boolean.
  * If an attribute has an array of values (e.g. class attribute), searchAttributes
- * will apply searchFunction to each one.
+ * will check each one.
  * @arg attrs {string} A list of attributes you want to search. If none provided, default is to search all.
  * @return Returns true if any of the attributes satisfy the search function
  */
